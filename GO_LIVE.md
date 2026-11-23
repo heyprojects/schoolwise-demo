@@ -92,7 +92,7 @@ The clock assumes the prerequisites above are already satisfied. Times are targe
 2. Add these environment values in Render; keep secrets in its secret fields:
    - `ASPNETCORE_ENVIRONMENT=Production`
    - `ASPNETCORE_HTTP_PORTS=10000`
-   - `DATABASE_URL=<Neon pooled URI>`
+   - `DATABASE_URL=<pooled schoolwise_app URL from the neon connection-string command>`
    - `JWT_SECRET=<fresh random secret, at least 32 UTF-8 bytes>`
    - `JWT_ISSUER=https://<your-render-service>.onrender.com`
    - `JWT_AUDIENCE=https://<your-vercel-project>.vercel.app`
