@@ -9,7 +9,13 @@ Implemented and verified locally against an isolated Neon test branch. See the r
 - Revalidated backend build (zero warnings/errors), 18 application tests, 14 isolated PostgreSQL integration tests, frontend lint and a production-configured frontend build.
 - Created production recovery branch `backup-before-reviews-20261123` (`br-dark-cloud-bggtwoqh`) before migration. It has no compute and expires **2026-11-30 at 20:00 UTC**. This is a temporary recovery point, not a long-term backup or a tested disaster-recovery procedure.
 - Applied and verified `AddSchoolVerification` and `AddReviews` on production using the direct migration-role connection. No existing table/data was removed.
-- Git publication, hosting deployments and live smoke checks are pending at this checkpoint.
+- Published release commit `47d94ed` to `main` on `heyprojects/schoolwise-demo`.
+- Both [Backend CI](https://github.com/heyprojects/schoolwise-demo/actions/runs/45252148615) and [Frontend CI](https://github.com/heyprojects/schoolwise-demo/actions/runs/45252148699) completed successfully.
+- [Vercel deployment](https://vercel.com/heyprojects-9865/schoolwise-demo/AD2hsFg4LSLHeFcouGDvnWLkcxzc) completed successfully. The new review API on Render and frontend routes were verified live.
+- Live URLs: [SchoolWise](https://schoolwise-demo.vercel.app), [My Reviews](https://schoolwise-demo.vercel.app/my-reviews), [Admin moderation](https://schoolwise-demo.vercel.app/admin/reviews).
+- Live smoke test passed: synthetic Parent registration/login/submission, pending review excluded from public ratings, approval through the authenticated Admin browser UI, anonymous filtered review response and exact score/count, then author deletion with score/count reset.
+- The live smoke test used a clearly labeled fictional school, not the existing school. Its test review was withdrawn and the school was unapproved afterward; no synthetic listing/review remains public. The synthetic account, hidden school and withdrawn review audit remain in the database by design.
+- Final live checks: API readiness, homepage, directory, My Reviews and Admin reviews all returned HTTP 200; the existing school's detail UI displayed zero Published reviews and no score, unchanged by testing. The public directory again contained only its original listing. Development sample reviews were not seeded in production.
 
 The sprint prioritizes Parent registration, school discovery, review submission, Admin moderation and anonymous review consumption. Existing verification-code work from the earlier sprint remains in the working tree but was not expanded; it is not a prerequisite for reviews. No verified-parent badge or relationship guarantee is offered.
 
