@@ -17,7 +17,9 @@ export async function fetchServerSchools(params: URLSearchParams) {
 }
 
 export async function fetchServerSchoolBySlug(slug: string) {
-  const response = await fetch(`${apiBaseUrl}/schools/slug/${encodeURIComponent(slug)}`, {
+  // Next route params may already be percent-encoded.
+  const encodedSlug = encodeURIComponent(decodeURIComponent(slug));
+  const response = await fetch(`${apiBaseUrl}/schools/slug/${encodedSlug}`, {
     next: { revalidate: 300 },
   });
   if (response.status === 404) {

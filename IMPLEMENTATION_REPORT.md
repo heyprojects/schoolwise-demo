@@ -138,3 +138,20 @@ Not implemented: school dashboards, claiming, advanced verification, fraud engin
 Before inviting real parents, finalize privacy/review policies and moderator procedures; implement operational handling for published-content complaints/removal and data-erasure requests; agree retention for version history and backups; test backup restoration; and use hosting terms/capacity suitable for the service. Soft deletion currently retains history and is not a complete GDPR-erasure operation. Current request limits are in-memory/single-instance. Email confirmation and moderator MFA are not provided by this sprint.
 
 Moderation notes are deliberately author-visible, not confidential staff notes. Moderation does not establish factual accuracy or a verified relationship with the school.
+
+## Athens catalog bootstrap
+
+Ten private kindergartens within the Municipality of Athens were researched and
+published through the existing Admin API. Each description records its Ministry
+school code, public sources, check date and any conflicting contact/address
+information. Unconfirmed tuition, capacity and photos were left empty. No Google
+review text, rating or count was imported; these schools initially have zero
+SchoolWise reviews. The original listing was left unchanged.
+
+The first Greek-slug listings exposed double encoding of Next route parameters
+in the server-side API lookup. Normalize the slug before encoding the outgoing
+API path; do not change existing school slugs. Verified ASCII, raw Greek and
+encoded Greek lookups, missing-school handling and upstream error propagation.
+Frontend lint, type checking and production build passed. The repaired local
+production build rendered all ten school detail pages and the directory using
+the public production API.
