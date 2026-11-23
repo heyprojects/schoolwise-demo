@@ -1,0 +1,16 @@
+.git
+.next
+**/node_modules
+**/bin
+**/obj
+**/TestResults
+**/.vs
+**/.env
+**/.env.*
+!.env.example
+tests
+frontend
+docs
+*.md
+*.user
+*.suo
