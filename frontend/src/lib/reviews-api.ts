@@ -2,7 +2,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { PageResult } from "@/lib/types";
 
-export type ReviewStatus = "PendingModeration" | "Published" | "Rejected";
+export type ReviewStatus = "Draft" | "PendingModeration" | "Published" | "Rejected";
+export type ModerationReviewStatus = Exclude<ReviewStatus, "Draft">;
 export interface ReviewContent {
   overallRating: number;
   teachingRating: number;
@@ -60,6 +61,7 @@ export const ratingFields = [
 ] as const;
 
 export const reviewStatusLabels: Record<ReviewStatus, string> = {
+  Draft: "Draft (private)",
   PendingModeration: "Pending moderation",
   Published: "Published",
   Rejected: "Rejected",
@@ -79,7 +81,7 @@ export async function fetchMyReviews(page = 1, status?: ReviewStatus, schoolId?:
   const { data } = await api.get<PageResult<ManagedReview>>("/reviews/mine", { params: { page, status, schoolId } });
   return data;
 }
-export async function fetchModerationReviews(page: number, status: ReviewStatus) {
+export async function fetchModerationReviews(page: number, status: ModerationReviewStatus) {
   const { data } = await api.get<PageResult<ManagedReview>>("/reviews/moderation", { params: { page, status } });
   return data;
 }
@@ -87,10 +89,10 @@ export async function fetchReviewHistory(id: string, page: number) {
   const { data } = await api.get<PageResult<ReviewHistory>>(`/reviews/${id}/history`, { params: { page } });
   return data;
 }
-export async function saveReview(schoolId: string, content: ReviewContent, existing?: ManagedReview) {
+export async function saveReview(schoolId: string, content: ReviewContent, existing?: ManagedReview, saveAsDraft = false) {
   const { data } = existing
-    ? await api.put<ManagedReview>(`/reviews/${existing.id}`, { version: existing.version, content })
-    : await api.post<ManagedReview>("/reviews", { schoolId, content });
+    ? await api.put<ManagedReview>(`/reviews/${existing.id}`, { version: existing.version, content, saveAsDraft })
+    : await api.post<ManagedReview>("/reviews", { schoolId, content, saveAsDraft });
   return data;
 }
 export async function deleteReview(review: ManagedReview) {

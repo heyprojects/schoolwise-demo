@@ -18,7 +18,7 @@ export function ReviewHistory({ id }: { id: string }) {
     {query.error && <p role="alert">{getErrorMessage(query.error)}</p>}
     {query.data?.items.map(version => <article key={version.version} className="space-y-3 rounded-lg border bg-white p-4">
       <h4 className="font-semibold">Version {version.version} - {reviewStatusLabels[version.status]}</h4>
-      <p className="text-sm text-slate-500">Submitted {new Date(version.submittedAt).toLocaleString()}{version.withdrawnAt ? " / withdrawn or superseded" : ""}</p>
+      <p className="text-sm text-slate-500">{version.status === "Draft" ? "Saved" : "Submitted"} {new Date(version.submittedAt).toLocaleString()}{version.withdrawnAt ? " / withdrawn or superseded" : ""}</p>
       <ReviewBody content={version.content} />
       {version.moderationNotes && <p className="text-sm">Admin note: {version.moderationNotes}</p>}
     </article>)}

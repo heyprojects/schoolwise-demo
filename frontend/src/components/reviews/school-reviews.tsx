@@ -48,7 +48,7 @@ export function SchoolReviews({ schoolId }: { schoolId: string }) {
       {mine.isPending && <p>Loading your review...</p>}
       {mine.error && <p role="alert">{getErrorMessage(mine.error)}</p>}
       {current && <div className="space-y-2"><p>Your review: <strong>{reviewStatusLabels[current.status]}</strong></p>{current.moderationNotes && <p>Admin note: {current.moderationNotes}</p>}<Link href="/my-reviews" className="nav-link">My Reviews - history and deletion</Link></div>}
-      {mine.isSuccess && <ReviewForm key={`${current?.id ?? "new"}-${current?.version ?? 0}`} schoolId={schoolId} existing={current} onSaved={() => setMessage("Your review was submitted and is waiting for moderation.")} />}
+      {mine.isSuccess && <ReviewForm key={`${current?.id ?? "new"}-${current?.version ?? 0}`} schoolId={schoolId} existing={current} onSaved={(review) => setMessage(review.status === "Draft" ? "Your private draft was saved. Only you can see it until you submit it." : "Your review was submitted and is waiting for moderation.")} />}
     </> : <p>Only Parent accounts can write reviews. Administrators manage the moderation queue.</p>}
   </section>;
 }

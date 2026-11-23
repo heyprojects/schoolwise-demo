@@ -51,7 +51,7 @@ export default function HomeClient({ initialSchools }: { initialSchools: PageRes
             </form>
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
               <span className="flex items-center gap-1.5"><ShieldCheck size={16} className="text-teal-700" /> Thoughtful school information</span>
-              <span className="flex items-center gap-1.5"><BadgeCheck size={16} className="text-teal-700" /> Parent reviews coming soon</span>
+              <span className="flex items-center gap-1.5"><BadgeCheck size={16} className="text-teal-700" /> Moderated parent reviews</span>
             </div>
           </div>
           <div className="hero-art relative mx-auto w-full max-w-[500px]">
@@ -89,11 +89,11 @@ export default function HomeClient({ initialSchools }: { initialSchools: PageRes
 
       <section id="how-it-works" className="bg-[#f3f7f6] py-16 sm:py-20">
         <div className="container-shell">
-          <div className="mx-auto max-w-2xl text-center"><p className="eyebrow justify-center">How SchoolWise helps</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">A better-informed choice starts here.</h2><p className="mt-4 leading-7 text-slate-600">Compare practical details today. Verified parent perspectives are part of what we are building next.</p></div>
+          <div className="mx-auto max-w-2xl text-center"><p className="eyebrow justify-center">How SchoolWise helps</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">A better-informed choice starts here.</h2><p className="mt-4 leading-7 text-slate-600">Compare practical school details and published parent experiences to help guide your decision.</p></div>
           <div className="mt-11 grid gap-5 md:grid-cols-3">
             <article className="benefit-card"><span className="benefit-icon"><Search size={20} /></span><h3>Explore your options</h3><p>Search by area, school type, and tuition range to focus on what matters to your family.</p></article>
             <article className="benefit-card"><span className="benefit-icon"><BookOpenCheck size={20} /></span><h3>Compare the details</h3><p>See school information, location, contact details, and photos in one place.</p></article>
-            <article className="benefit-card"><span className="benefit-icon"><ShieldCheck size={20} /></span><h3>Trust the journey</h3><p>Verified parent reviews are coming in a future phase. They are not yet available on SchoolWise.</p></article>
+            <article className="benefit-card"><span className="benefit-icon"><ShieldCheck size={20} /></span><h3>Read parent experiences</h3><p>Read published reviews and school ratings, or submit your own experience for moderation. Reviews are not independently verified.</p></article>
           </div>
         </div>
       </section>
