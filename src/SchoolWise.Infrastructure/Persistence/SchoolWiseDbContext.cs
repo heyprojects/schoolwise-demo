@@ -9,6 +9,10 @@ public sealed class SchoolWiseDbContext(DbContextOptions<SchoolWiseDbContext> op
     public DbSet<School> Schools => Set<School>();
     public DbSet<SchoolPhoto> SchoolPhotos => Set<SchoolPhoto>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
+    public DbSet<ParentSchoolVerification> ParentSchoolVerifications => Set<ParentSchoolVerification>();
+    public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ReviewVersion> ReviewVersions => Set<ReviewVersion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

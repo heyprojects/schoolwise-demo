@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolWise.Application.Common;
+using SchoolWise.Application.Verifications;
+using SchoolWise.Application.Reviews;
 using SchoolWise.Infrastructure.Persistence;
 using SchoolWise.Infrastructure.Persistence.Repositories;
 using SchoolWise.Infrastructure.Security;
@@ -28,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IVerificationRepository, VerificationRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IUnitOfWork, SchoolWiseUnitOfWork>();
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddSingleton<ITokenService, JwtTokenService>();

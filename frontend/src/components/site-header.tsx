@@ -32,6 +32,8 @@ export function SiteHeader() {
           ) : user ? (
             <>
               {user.role === "Admin" && <Link href="/admin/schools" className="mr-2 hidden text-sm font-semibold text-slate-700 sm:inline">Admin</Link>}
+              {user.role === "Admin" && <Link href="/admin/reviews" className="text-sm font-semibold text-slate-700">Reviews</Link>}
+              {user.role === "Parent" && <Link href="/my-reviews" className="text-sm font-semibold text-slate-700">My Reviews</Link>}
               <span className="hidden text-sm text-slate-600 md:inline">Hi, {user.firstName}</span>
               <Button variant="outline" size="sm" onClick={handleLogout} aria-label="Sign out">
                 <LogOut size={15} /> <span className="hidden sm:inline">Sign out</span>

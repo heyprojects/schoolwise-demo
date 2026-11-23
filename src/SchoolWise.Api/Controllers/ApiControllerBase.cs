@@ -18,6 +18,11 @@ public abstract class ApiControllerBase : ControllerBase
             "email_taken" or "slug_taken" => StatusCodes.Status409Conflict,
             "school_not_found" or "user_not_found" => StatusCodes.Status404NotFound,
             "invalid_credentials" or "invalid_refresh_token" => StatusCodes.Status401Unauthorized,
+            "forbidden" => StatusCodes.Status403Forbidden,
+            "verification_code_not_found" => StatusCodes.Status404NotFound,
+            "verification_conflict" => StatusCodes.Status409Conflict,
+            "review_exists" or "review_conflict" => StatusCodes.Status409Conflict,
+            "review_not_found" => StatusCodes.Status404NotFound,
             _ => StatusCodes.Status400BadRequest
         };
         var details = new ProblemDetails

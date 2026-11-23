@@ -26,7 +26,7 @@ export default function SchoolsBrowser({
   const schools = useQuery({
     queryKey: ["schools", filters],
     queryFn: () => searchSchools(filters),
-    initialData,
+    initialData: filters === initialFilters ? initialData : undefined,
     placeholderData: (previous) => previous,
   });
 

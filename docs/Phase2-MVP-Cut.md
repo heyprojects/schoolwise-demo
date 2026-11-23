@@ -1,9 +1,23 @@
 # SchoolWise Phase 2 MVP Cut
 
 **Decision memo — 2026-11-22**  
-**Status:** Product/architecture recommendation only. No Phase 2 code or database changes are included.
+**Status:** Product priority changed on 2026-11-23: the current sprint implements reviews, version history, Admin moderation and arithmetic ratings from all Published reviews, without a verification gate. The earlier code-only foundation remains experimental and is not expanded. Neither new schema has been deployed to production in this session. See [the implementation report](../IMPLEMENTATION_REPORT.md) for the current implemented scope.
 
 > **This cut supersedes the broader single-release scope in [Phase2-MVP-Recommendation.md](Phase2-MVP-Recommendation.md) and [Phase2-Roadmap.md](Phase2-Roadmap.md) for a one-developer launch.** The other Phase 2 documents remain the target-state design, not an MVP implementation checklist.
+
+> **Current sprint supersession:** The verified-only eligibility, score-weighting and five-parent threshold requirements below are the earlier trust-pilot proposal, not this sprint's acceptance checklist. Current reviews are explicitly unverified; all Published reviews count. Public verification badges, fraud engines, votes, notifications, AI and school claiming are not implemented. Real-parent legal/privacy and operational launch gates still apply.
+
+## Implementation checkpoint: code-only eligibility
+
+- Admin screen `/admin/verifications`: find an approved school, issue up to 50 codes, copy plaintext once, inspect paged metadata, and revoke with a reason.
+- Parent screen `/verifications`: redeem a school-specific code and inspect own active/expired/revoked eligibility.
+- Hash-only persistence, transactional single use, current-account role checks, one current grant per parent/school, renewal, audit metadata, paginated reads and per-account rate limits are implemented. The API and schema are documented in [ApiEndpoints.md](ApiEndpoints.md) and [DatabaseSchema.md](DatabaseSchema.md).
+- No new packages, uploads, paid services or production schema changes. The implementation uses the existing EF Core/Npgsql stack.
+- Validation: 15 application tests and 8 PostgreSQL/API tests passed against an isolated, expiring Neon branch, including simultaneous redemption, renewal, revocation, expired codes, role/ownership boundaries and rate limits. Frontend lint and production build passed. A browser completed Admin issuance -> new Parent registration/login -> redemption -> Active eligibility using the scoped runtime database role.
+- **Still blocked for real users:** confirmed email, MFA/Moderator controls, versioned reviews and human moderation, legal/privacy/retention operations, partner agreements, production-capable hosting and backup/restore rehearsal. The UI explicitly labels this as a demo foundation; no public verified-parent badge or ratings are enabled.
+- Rate limits are single-process/in-memory; restarts reset counters. Strengthen enrollment and abuse controls before a real pilot. The Admin must choose the authorized school-year cutoff; the server caps validity at 12 months but cannot infer enrollment periods.
+- Before deploying this slice: back up the target database, review the additive `AddSchoolVerification` migration, apply it using a direct owner connection, verify runtime-role permissions on the new tables, then deploy API before frontend and repeat the two-role smoke test. Do not blindly run tests or migrations against production.
+- The temporary test branch expires automatically; do not copy its credentials into Render/Vercel. Existing production environment files and resources are unchanged.
 
 ## Executive decision
 

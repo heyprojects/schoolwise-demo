@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Globe2, Mail, MapPin, Phone, School as SchoolIcon } from "lucide-react";
 import { fetchServerSchoolBySlug } from "@/lib/server-api";
 import { schoolTypeLabels } from "@/lib/types";
+import { SchoolReviews } from "@/components/reviews/school-reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,7 @@ export default async function SchoolDetailsPage({ params }: SchoolDetailsPagePro
         </div>
         <aside><div className="contact-card"><p className="eyebrow">Get in touch</p><h2>Contact information</h2><div className="mt-5 space-y-4">{school.phone && <a className="contact-line" href={`tel:${school.phone}`}><Phone size={17} />{school.phone}</a>}{school.email && <a className="contact-line" href={`mailto:${school.email}`}><Mail size={17} />{school.email}</a>}{school.website && <a className="contact-line" href={school.website} target="_blank" rel="noreferrer"><Globe2 size={17} />Visit website</a>}{!school.phone && !school.email && !school.website && <p className="text-sm leading-6 text-slate-500">Contact details have not been provided for this listing.</p>}</div></div></aside>
       </div>
+      <SchoolReviews schoolId={school.id} />
     </div>
   );
 }

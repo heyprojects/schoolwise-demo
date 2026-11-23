@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SchoolWise.Application.Common;
 using SchoolWise.Domain.Entities;
 using SchoolWise.Domain.Enums;
@@ -31,28 +32,38 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
             return;
         }
 
-        _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
-        await _postgres.StartAsync();
-
-        var connectionString = _postgres.GetConnectionString();
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        var connectionString = Environment.GetEnvironmentVariable("TEST_DATABASE_URL");
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureAppConfiguration((_, configuration) =>
-                configuration.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Default"] = connectionString,
-                    ["Jwt:Secret"] = "integration-test-secret-with-at-least-32-bytes",
-                    ["Jwt:Issuer"] = "SchoolWise",
-                    ["Jwt:Audience"] = "SchoolWise.Web",
-                    ["Frontend:Origin"] = "http://localhost:3000"
-                }));
-        });
+            _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
+            await _postgres.StartAsync();
+            connectionString = _postgres.GetConnectionString();
+        }
+        _factory = new TestApiFactory(connectionString);
 
         using var scope = _factory.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<SchoolWiseDbContext>();
         await database.Database.MigrateAsync();
         Client = _factory.CreateClient();
+    }
+
+    internal sealed class TestApiFactory(string connectionString) : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseEnvironment("Testing");
+
+        protected override IHost CreateHost(IHostBuilder builder)
+        {
+            builder.ConfigureHostConfiguration(configuration => configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Default"] = connectionString,
+                ["DATABASE_URL"] = connectionString,
+                ["Jwt:Secret"] = "integration-test-secret-with-at-least-32-bytes",
+                ["Jwt:Issuer"] = "SchoolWise",
+                ["Jwt:Audience"] = "SchoolWise.Web",
+                ["Frontend:Origins"] = "http://localhost:3000"
+            }));
+            return base.CreateHost(builder);
+        }
     }
 
     public async Task DisposeAsync()
@@ -76,7 +87,7 @@ public sealed class RequiresPostgreSqlAttribute : FactAttribute
     {
         if (Environment.GetEnvironmentVariable("RUN_POSTGRES_INTEGRATION_TESTS") != "1")
         {
-            Skip = "Set RUN_POSTGRES_INTEGRATION_TESTS=1 to run tests that require Docker.";
+            Skip = "Set RUN_POSTGRES_INTEGRATION_TESTS=1; use Docker or TEST_DATABASE_URL pointing to an isolated test database.";
         }
     }
 }

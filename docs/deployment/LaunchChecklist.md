@@ -21,7 +21,7 @@ Do not treat a green build as production approval. Complete and record each item
 ## Authentication and Admin
 
 - [ ] Verify `JWT_SECRET` is a unique random value of at least 32 UTF-8 bytes; set stable issuer and audience.
-- [ ] Bootstrap the first Admin through `Seed__AdminEmail` / `Seed__AdminPassword`; log in; then remove the password secret.
+- [ ] Bootstrap the first Admin through `Seed__AdminEmail` / `Seed__AdminPassword`; log in; then remove both variables together to avoid startup failure.
 - [ ] Confirm public registration creates only Parent accounts and Admin routes reject non-Admin users.
 - [ ] Test login, refresh, logout/revoke, expiry, duplicate accounts, and wrong credentials from the deployed frontend.
 - [ ] Verify refresh cookie is `HttpOnly; Secure; SameSite=None` and refresh/revoke reject unknown origins.

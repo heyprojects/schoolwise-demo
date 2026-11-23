@@ -66,7 +66,7 @@ Take a backup before production schema changes. The design-time DbContext factor
 
 Render's default web-service port is `10000`; the Docker image listens on that port and binds to all interfaces. The compose setup overrides this to local port `8080`.
 
-4. Deploy and wait for `/ready` to pass. Log in using the initial Admin account, then remove `Seed__AdminPassword` from Render's environment and redeploy. The seeder only creates the account if that email does not already exist; it does not reset the password.
+4. Deploy and wait for `/ready` to pass. Log in using the initial Admin account, then remove both `Seed__AdminEmail` and `Seed__AdminPassword` from Render's environment and redeploy. Removing only one causes startup to fail. The seeder only creates the account if that email does not already exist; it does not reset the password or delete the existing account.
 5. Confirm the Render HTTPS URL works and note it for Vercel. Render provides managed TLS for its `onrender.com` hostname; custom API domains can be added in the Render dashboard.
 
 The API only enables Swagger in Development. Production errors are returned through ProblemDetails and logs go to the console for the host to collect.

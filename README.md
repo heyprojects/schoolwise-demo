@@ -1,6 +1,6 @@
 # SchoolWise
 
-SchoolWise helps parents discover and compare schools in Greece. Phase 1 provides account authentication, school search/details, and administrator school management. **Reviews and review verification are intentionally not implemented.**
+SchoolWise helps parents discover and compare schools in Greece. It provides authentication, school search/details, administrator school management, and a review sprint with parent submissions, version history, Admin moderation and published-only school ratings. Reviews do **not** require school verification; no verified-parent badge is claimed. The earlier experimental code-verification foundation is not expanded by this sprint.
 
 ## Stack
 
@@ -28,7 +28,7 @@ Open:
 - API Swagger: <http://localhost:8080/swagger>
 - API health: <http://localhost:8080/health>
 
-Compose runs a one-shot `migrate` service before the API starts; API replicas do not apply migrations during startup. In the separate-service workflow, run `dotnet ef database update` before starting the API. The Development API seeds clearly labeled demo listings for Athens, kindergartens, elementary schools, and both public/private school types.
+Compose runs a one-shot `migrate` service before the API starts; API replicas do not apply migrations during startup. In the separate-service workflow, run `dotnet ef database update` before starting the API. The Development API seeds clearly labeled demo schools and fictional sample reviews (Published, PendingModeration and Rejected). These review samples are never seeded in Production or attached to real-school listings.
 
 Development administrator:
 
@@ -78,7 +78,9 @@ docs/
   DatabaseSchema.md
   ApiEndpoints.md
   DevelopmentRoadmap.md
-  Phase2-*.md                 Phase 2 design only; not implemented
+  Phase2-*.md                 Target-state design and implementation checkpoints
+  SchoolCatalogBootstrap.md  Manual onboarding and future CSV import strategy
+IMPLEMENTATION_REPORT.md
 REVIEW.md
 ```
 
@@ -119,12 +121,21 @@ dotnet test tests/SchoolWise.Integration.Tests
 ## Configuration and security notes
 
 - Production must provide `DATABASE_URL`, `JWT_SECRET` (at least 32 bytes), `JWT_ISSUER`, `JWT_AUDIENCE`, and `FRONTEND_ORIGINS` through a secret manager/environment.
-- `Seed__AdminEmail` and `Seed__AdminPassword` can create the initial production Admin once; remove the password secret after the account is created. Demo schools are seeded only in Development.
+- `Seed__AdminEmail` and `Seed__AdminPassword` can create the initial production Admin once; remove both variables together after the account is created. Leaving only one prevents startup. Demo schools/reviews are seeded only in Development.
 - `AutoMapper:LicenseKey` can be provided by the deployment secret manager; do not commit a commercial license key.
 - Refresh tokens are stored as SHA-256 hashes and rotated on use. The browser receives the refresh token only as an HttpOnly cookie.
 - Production refresh cookies use `SameSite=None; Secure` for the cross-site Vercel/Render default domains. Refresh and revoke requests are restricted to the configured frontend origins.
 - Public school endpoints expose approved listings only; `/api/v1/schools/admin` and all school write endpoints require the Admin role.
 - Photo and logo URLs are externally hosted in this phase and must be absolute HTTP/HTTPS URLs.
+
+## Review workflow
+
+1. Register a Parent, log in and open a school detail page. Submit all six ratings (1-5) and at least 20 characters about your experience. No school-issued code is required.
+2. An Admin opens `/admin/reviews`, inspects the exact version and approves or rejects it. Notes are visible to the Parent, not to visitors; rejection requires a reason.
+3. Visitors see only Published, non-deleted reviews and their arithmetic mean/category scores on the school page.
+4. Parents use `/my-reviews` for status, editing, deletion and version history. Editing temporarily unpublishes a review until approval; deleting removes it from public lists/ratings while retaining private history.
+
+Apply `AddReviews` and all preceding migrations before deploying this frontend. See [the implementation report](IMPLEMENTATION_REPORT.md), [API contracts](docs/ApiEndpoints.md) and [school catalog bootstrap](docs/SchoolCatalogBootstrap.md). Do not run Development seeding or integration tests against production. Real-user launch still requires privacy/review policies, an accountable complaint/removal process, appropriate hosting and tested backups.
 
 ## Deployment
 

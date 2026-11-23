@@ -15,7 +15,7 @@ Set hosted values in Render/Vercel secret/environment settings, not in Git. Root
 | `ASPNETCORE_ENVIRONMENT` | Yes in hosted API | Set to `Production`; development demo data and Swagger are disabled outside Development. |
 | `ASPNETCORE_HTTP_PORTS` | Render Docker service | Set to `10000` (the Render web-service port). Compose overrides it to `8080`. |
 | `Seed__AdminEmail` | Initial bootstrap only | Email for creating the first Admin account if it does not exist. |
-| `Seed__AdminPassword` | Initial bootstrap only | Strong one-time password for the first Admin. Remove from the host after successful initialization; it is not used to change an existing password. |
+| `Seed__AdminPassword` | Initial bootstrap only | Strong one-time password for the first Admin. Remove both `Seed__AdminEmail` and `Seed__AdminPassword` from the host after successful initialization; leaving only one causes startup failure. It is not used to change an existing password. |
 | `POSTGRES_USER` | Local Compose only | Local PostgreSQL username. |
 | `POSTGRES_PASSWORD` | Local Compose only | Local PostgreSQL password; Compose fails fast if empty. |
 | `ADMIN_EMAIL` | Local Compose only | Development seed email, mapped to `Seed:AdminEmail`. |

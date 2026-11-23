@@ -78,3 +78,27 @@ npm run dev
 
 The frontend defaults to `http://localhost:8080/api/v1`; override it in `frontend/.env.local` if the API runs elsewhere. The API seeds clearly labeled demo schools only in Development.
 
+## Verification foundation checks
+
+Apply migrations before opening `/admin/verifications` (Admin) or `/verifications` (Parent). Use separate synthetic accounts: an Admin cannot redeem Parent codes. Issue a code for an approved school, redeem it as the Parent, then revoke its ID as Admin and reload the Parent status. Do not use real enrollment data or documents.
+
+Run application tests with `dotnet test tests\SchoolWise.Application.Tests`. PostgreSQL/API tests normally use a disposable Docker Testcontainer:
+
+```powershell
+$env:RUN_POSTGRES_INTEGRATION_TESTS = "1"
+dotnet test tests\SchoolWise.Integration.Tests
+```
+
+Without Docker, set `TEST_DATABASE_URL` in the same process to a **direct owner URL for a dedicated, disposable test database/Neon branch** before that command. Tests apply migrations and insert synthetic records. Never point it at production or a shared database. Do not print the value or commit it; the opt-in flag is still required. Test configuration is supplied before API service registration and does not change the app's production settings.
+
+## Review sprint smoke test
+
+1. Apply all migrations, including `AddReviews`, to a local/disposable database before starting the API. Development seeding creates five clearly labeled demo school listings if none exist, with six fictional reviews per demo school (four Published, one PendingModeration, one Rejected).
+2. Register a fresh Parent; open a school page and submit a review with all six ratings. No verification code is required.
+3. Confirm it is PendingModeration in `/my-reviews` and absent from public ratings/list.
+4. Log in as the configured development Admin, open `/admin/reviews` and approve the displayed version.
+5. As a visitor, verify the review and score on that school's page. Filter by overall rating and change sorting.
+6. Edit as the Parent; confirm it disappears pending approval. Reject with a reason; confirm that reason in My Reviews. Delete and confirm public count/scores update immediately.
+
+Sample accounts have random inaccessible passwords; register your own synthetic Parent to test editing. Sample reviews contain `[SAMPLE - fictional test review]` and are never seeded outside Development or onto real-school listings. Production startup only bootstraps an Admin when both bootstrap variables are supplied.
+
