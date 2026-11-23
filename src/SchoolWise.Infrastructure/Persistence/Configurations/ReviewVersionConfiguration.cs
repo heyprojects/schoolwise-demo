@@ -11,9 +11,9 @@ public sealed class ReviewVersionConfiguration : IEntityTypeConfiguration<Review
         builder.ToTable("review_versions", table =>
         {
             table.HasCheckConstraint("ck_review_versions_ratings", ReviewContentConfiguration.RatingsConstraint);
-            table.HasCheckConstraint("ck_review_versions_status", "status IN ('PendingModeration', 'Published', 'Rejected')");
+            table.HasCheckConstraint("ck_review_versions_status", "status IN ('Draft', 'PendingModeration', 'Published', 'Rejected')");
             table.HasCheckConstraint("ck_review_versions_decision",
-                "(status = 'PendingModeration' AND reviewed_at IS NULL AND reviewed_by IS NULL) OR " +
+                "(status IN ('Draft', 'PendingModeration') AND reviewed_at IS NULL AND reviewed_by IS NULL) OR " +
                 "(status IN ('Published', 'Rejected') AND reviewed_at IS NOT NULL AND reviewed_by IS NOT NULL)");
             table.HasCheckConstraint("ck_review_versions_version", "version > 0");
         });

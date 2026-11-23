@@ -11,7 +11,7 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.ToTable("reviews", table =>
         {
             table.HasCheckConstraint("ck_reviews_ratings", ReviewContentConfiguration.RatingsConstraint);
-            table.HasCheckConstraint("ck_reviews_status", "status IN ('PendingModeration', 'Published', 'Rejected')");
+            table.HasCheckConstraint("ck_reviews_status", "status IN ('Draft', 'PendingModeration', 'Published', 'Rejected')");
             table.HasCheckConstraint("ck_reviews_version", "version > 0");
         });
         builder.HasKey(review => review.Id);
@@ -29,9 +29,12 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
 internal static class ReviewContentConfiguration
 {
-    public const string RatingsConstraint = "overall_rating BETWEEN 1 AND 5 AND teaching_rating BETWEEN 1 AND 5 AND " +
+    public const string RatingsConstraint = "(status = 'Draft' AND overall_rating BETWEEN 0 AND 5 AND teaching_rating BETWEEN 0 AND 5 AND " +
+        "safety_rating BETWEEN 0 AND 5 AND communication_rating BETWEEN 0 AND 5 AND " +
+        "facilities_rating BETWEEN 0 AND 5 AND activities_rating BETWEEN 0 AND 5) OR " +
+        "(status <> 'Draft' AND overall_rating BETWEEN 1 AND 5 AND teaching_rating BETWEEN 1 AND 5 AND " +
         "safety_rating BETWEEN 1 AND 5 AND communication_rating BETWEEN 1 AND 5 AND " +
-        "facilities_rating BETWEEN 1 AND 5 AND activities_rating BETWEEN 1 AND 5";
+        "facilities_rating BETWEEN 1 AND 5 AND activities_rating BETWEEN 1 AND 5)";
 
     public static void Configure(ComplexPropertyBuilder<ReviewContent> builder)
     {

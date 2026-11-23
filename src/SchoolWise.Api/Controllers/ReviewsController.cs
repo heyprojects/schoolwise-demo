@@ -37,7 +37,7 @@ public sealed class ReviewsController(ISender sender) : ApiControllerBase
     [EnableRateLimiting("review-write")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Edit(Guid id, EditReviewInput input, CancellationToken cancellationToken) =>
-        FromResult(await sender.Send(new EditReviewCommand(id, input.Version, input.Content), cancellationToken));
+        FromResult(await sender.Send(new EditReviewCommand(id, input.Version, input.Content, input.SaveAsDraft), cancellationToken));
 
     [Authorize(Policy = "ParentOnly")]
     [HttpDelete("{id:guid}")]
@@ -69,6 +69,6 @@ public sealed class ReviewsController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> History(Guid id, [FromQuery] int page = 1, CancellationToken cancellationToken = default) =>
         FromResult(await sender.Send(new ReviewHistoryQuery(id, page), cancellationToken));
 
-    public sealed record EditReviewInput(int Version, ReviewWriteDto Content);
+    public sealed record EditReviewInput(int Version, ReviewWriteDto Content, bool SaveAsDraft = false);
     public sealed record ModerationInput(int Version, bool Approve, string? Notes);
 }

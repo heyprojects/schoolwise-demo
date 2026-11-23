@@ -12,7 +12,7 @@ public sealed class ReviewVersion
         ReviewId = review.Id;
         Version = review.Version;
         Content = review.Content;
-        Status = ReviewStatus.PendingModeration;
+        Status = review.Status;
         SubmittedAt = review.UpdatedAt;
     }
 

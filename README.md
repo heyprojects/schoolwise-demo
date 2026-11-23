@@ -130,12 +130,12 @@ dotnet test tests/SchoolWise.Integration.Tests
 
 ## Review workflow
 
-1. Register a Parent, log in and open a school detail page. Submit all six ratings (1-5) and at least 20 characters about your experience. No school-issued code is required.
+1. Register a Parent, log in and open a school detail page. Save an incomplete private Draft, or submit all six ratings (1-5) and at least 20 characters about your experience. No school-issued code is required.
 2. An Admin opens `/admin/reviews`, inspects the exact version and approves or rejects it. Notes are visible to the Parent, not to visitors; rejection requires a reason.
 3. Visitors see only Published, non-deleted reviews and their arithmetic mean/category scores on the school page.
-4. Parents use `/my-reviews` for status, editing, deletion and version history. Editing temporarily unpublishes a review until approval; deleting removes it from public lists/ratings while retaining private history.
+4. Parents use `/my-reviews` for all four statuses, continuing Drafts, editing, deletion and version history. Saving edits, even as Draft, immediately unpublishes a review until a new submission is approved. Deleting removes it from public lists/ratings while retaining history. Unsubmitted Draft content and snapshots are author-only, not visible to Admins.
 
-Apply `AddReviews` and all preceding migrations before deploying this frontend. See [the implementation report](IMPLEMENTATION_REPORT.md), [API contracts](docs/ApiEndpoints.md) and [school catalog bootstrap](docs/SchoolCatalogBootstrap.md). Do not run Development seeding or integration tests against production. Real-user launch still requires privacy/review policies, an accountable complaint/removal process, appropriate hosting and tested backups.
+Apply `AddReviews`, `AddReviewDrafts` and all preceding migrations, then deploy the Draft-aware API **before** the frontend. Older API versions ignore unknown JSON fields and must not receive Draft saves from the new UI. Development seeding provides 20 Published, 5 PendingModeration, 5 Rejected and 5 private Draft sample reviews on five explicitly fictional Demo schools only. See [the earlier implementation report](IMPLEMENTATION_REPORT.md), [API contracts](docs/ApiEndpoints.md) and [school catalog bootstrap](docs/SchoolCatalogBootstrap.md). Do not run Development seeding or integration tests against production. Real-user launch still requires privacy/review policies, an accountable complaint/removal process, appropriate hosting and tested backups.
 
 ## Deployment
 

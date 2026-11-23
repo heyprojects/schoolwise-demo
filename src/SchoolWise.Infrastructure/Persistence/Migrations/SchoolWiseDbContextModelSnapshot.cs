@@ -226,9 +226,9 @@ namespace SchoolWise.Infrastructure.Persistence.Migrations
 
                     b.ToTable("reviews", null, t =>
                         {
-                            t.HasCheckConstraint("ck_reviews_ratings", "overall_rating BETWEEN 1 AND 5 AND teaching_rating BETWEEN 1 AND 5 AND safety_rating BETWEEN 1 AND 5 AND communication_rating BETWEEN 1 AND 5 AND facilities_rating BETWEEN 1 AND 5 AND activities_rating BETWEEN 1 AND 5");
+                            t.HasCheckConstraint("ck_reviews_ratings", "(status = 'Draft' AND overall_rating BETWEEN 0 AND 5 AND teaching_rating BETWEEN 0 AND 5 AND safety_rating BETWEEN 0 AND 5 AND communication_rating BETWEEN 0 AND 5 AND facilities_rating BETWEEN 0 AND 5 AND activities_rating BETWEEN 0 AND 5) OR (status <> 'Draft' AND overall_rating BETWEEN 1 AND 5 AND teaching_rating BETWEEN 1 AND 5 AND safety_rating BETWEEN 1 AND 5 AND communication_rating BETWEEN 1 AND 5 AND facilities_rating BETWEEN 1 AND 5 AND activities_rating BETWEEN 1 AND 5)");
 
-                            t.HasCheckConstraint("ck_reviews_status", "status IN ('PendingModeration', 'Published', 'Rejected')");
+                            t.HasCheckConstraint("ck_reviews_status", "status IN ('Draft', 'PendingModeration', 'Published', 'Rejected')");
 
                             t.HasCheckConstraint("ck_reviews_version", "version > 0");
                         });
@@ -335,11 +335,11 @@ namespace SchoolWise.Infrastructure.Persistence.Migrations
 
                     b.ToTable("review_versions", null, t =>
                         {
-                            t.HasCheckConstraint("ck_review_versions_decision", "(status = 'PendingModeration' AND reviewed_at IS NULL AND reviewed_by IS NULL) OR (status IN ('Published', 'Rejected') AND reviewed_at IS NOT NULL AND reviewed_by IS NOT NULL)");
+                            t.HasCheckConstraint("ck_review_versions_decision", "(status IN ('Draft', 'PendingModeration') AND reviewed_at IS NULL AND reviewed_by IS NULL) OR (status IN ('Published', 'Rejected') AND reviewed_at IS NOT NULL AND reviewed_by IS NOT NULL)");
 
-                            t.HasCheckConstraint("ck_review_versions_ratings", "overall_rating BETWEEN 1 AND 5 AND teaching_rating BETWEEN 1 AND 5 AND safety_rating BETWEEN 1 AND 5 AND communication_rating BETWEEN 1 AND 5 AND facilities_rating BETWEEN 1 AND 5 AND activities_rating BETWEEN 1 AND 5");
+                            t.HasCheckConstraint("ck_review_versions_ratings", "(status = 'Draft' AND overall_rating BETWEEN 0 AND 5 AND teaching_rating BETWEEN 0 AND 5 AND safety_rating BETWEEN 0 AND 5 AND communication_rating BETWEEN 0 AND 5 AND facilities_rating BETWEEN 0 AND 5 AND activities_rating BETWEEN 0 AND 5) OR (status <> 'Draft' AND overall_rating BETWEEN 1 AND 5 AND teaching_rating BETWEEN 1 AND 5 AND safety_rating BETWEEN 1 AND 5 AND communication_rating BETWEEN 1 AND 5 AND facilities_rating BETWEEN 1 AND 5 AND activities_rating BETWEEN 1 AND 5)");
 
-                            t.HasCheckConstraint("ck_review_versions_status", "status IN ('PendingModeration', 'Published', 'Rejected')");
+                            t.HasCheckConstraint("ck_review_versions_status", "status IN ('Draft', 'PendingModeration', 'Published', 'Rejected')");
 
                             t.HasCheckConstraint("ck_review_versions_version", "version > 0");
                         });

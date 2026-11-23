@@ -6,14 +6,14 @@ public sealed class Review
 {
     private Review() { }
 
-    public Review(Guid schoolId, Guid userId, ReviewContent content)
+    public Review(Guid schoolId, Guid userId, ReviewContent content, bool saveAsDraft = false)
     {
         Id = Guid.NewGuid();
         SchoolId = schoolId;
         UserId = userId;
         Content = content;
         Version = 1;
-        Status = ReviewStatus.PendingModeration;
+        Status = saveAsDraft ? ReviewStatus.Draft : ReviewStatus.PendingModeration;
         CreatedAt = UpdatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -28,11 +28,11 @@ public sealed class Review
     public DateTimeOffset? DeletedAt { get; private set; }
     public School School { get; private set; } = null!;
 
-    public void Resubmit(ReviewContent content)
+    public void Resubmit(ReviewContent content, bool saveAsDraft = false)
     {
         Content = content;
         Version++;
-        Status = ReviewStatus.PendingModeration;
+        Status = saveAsDraft ? ReviewStatus.Draft : ReviewStatus.PendingModeration;
         UpdatedAt = DateTimeOffset.UtcNow;
         DeletedAt = null;
     }

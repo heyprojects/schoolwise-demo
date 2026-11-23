@@ -140,14 +140,14 @@ erDiagram
 
 ## Review sprint
 
-Migration: `AddReviews`, after existing migrations. No extra database/storage provider is required.
+Migrations: `AddReviews`, then `AddReviewDrafts`. No extra database/storage provider is required. The Draft migration changes only check constraints on current reviews and snapshots; it does not rewrite existing content or school records.
 
 ### `reviews`
 
 - UUID `id`, required `school_id` and author `user_id`, unique `(user_id, school_id)`.
-- All six integer rating fields with a database check enforcing 1-5.
-- `pros` / `cons` varchar(1000), nullable; required `review_text` varchar(5000).
-- `status` varchar(32): `PendingModeration`, `Published`, `Rejected`, database-checked.
+- All six integer rating fields with a database check enforcing 0-5 **only for Draft** and 1-5 for every submitted status. Draft zero means an unselected rating, never a public score.
+- `pros` / `cons` varchar(1000), nullable; nonnull `review_text` varchar(5000). Draft text can be empty; submission validates at least 20 trimmed characters in the application layer.
+- `status` varchar(32): `Draft`, `PendingModeration`, `Published`, `Rejected`, database-checked. Existing enum values remain unchanged; persistence uses strings.
 - Positive `version`, UTC `created_at`, `updated_at`, nullable `deleted_at`.
 - Optimistic concurrency on version, status and deletion timestamp. Create/edit/delete/moderation and snapshot changes commit in one SaveChanges transaction.
 - School/author FKs restrict deletion to preserve version/decision history. School/status/update-time and moderation status/update-time indexes support lists.
@@ -156,12 +156,16 @@ Migration: `AddReviews`, after existing migrations. No extra database/storage pr
 
 - UUID `id`; required `review_id`, positive version; unique `(review_id, version)`.
 - Immutable content snapshot with the same rating/text fields and rating checks.
-- `status`, `submitted_at`, nullable `reviewed_at`, `reviewed_by`, parent-visible `moderation_notes` (max 1,000), and `withdrawn_at`.
+- `status`, `submitted_at`, nullable `reviewed_at`, `reviewed_by`, parent-visible `moderation_notes` (max 1,000), and `withdrawn_at`. For Draft snapshots, the existing `submitted_at` field records the save time and the UI labels it "Saved".
 - Only decision/withdrawal metadata changes after creation; edits create a new version rather than overwriting content.
-- Check constraints require a decision actor/time for Published or Rejected and no decision for pending snapshots.
+- Check constraints require a decision actor/time for Published or Rejected and no decision for Draft or PendingModeration snapshots.
 - Concurrency on status/withdrawal prevents stale version decisions; FK to review/reviewing user restricts deletion.
 
-The current review holds the content/version used by public queries. An edit immediately changes status to PendingModeration and marks the previous snapshot withdrawn/superseded. Deletion sets `deleted_at`; old text remains in private history. Resubmission after deletion increments the same review's version, so a Parent cannot accumulate separate review identities for one school.
+The current review holds the content/version used by public queries. Saving an edit immediately changes status to Draft or PendingModeration according to `saveAsDraft` and marks the previous snapshot withdrawn/superseded. Both actions unpublish any earlier rating/content. Deletion sets `deleted_at`; old text remains in private history. Recreation after deletion increments the same review's version, so a Parent cannot accumulate separate review identities for one school.
+
+Drafts, including historical snapshots, are visible only to their author. Admin-managed queries always exclude current Drafts; history requires owner access for a current Draft and filters historical Draft snapshots out of Admin results before pagination/counting. Public queries and aggregates remain Published-only.
+
+The generated Down migration reinstates the older, stricter checks and will fail transactionally if current or historical Draft rows exist. Do not downgrade or deploy a Draft-unaware API after accepting Draft content; preserve the new schema/API or use a reviewed recovery procedure without publishing private drafts.
 
 These private histories are not a complete GDPR erasure solution. Define operational retention/erasure, handling of legal holds and backup restoration before accepting real user content; do not retain personal review text indefinitely.
 

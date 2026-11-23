@@ -226,6 +226,159 @@ public sealed class ReviewApiTests(PostgreSqlFixture fixture) : IClassFixture<Po
         Assert.Equal(second.Id, Assert.Single((await sorted.Content.ReadFromJsonAsync<PagedResult<PublicReviewDto>>())!.Items).Id);
     }
 
+    [RequiresPostgreSql]
+    public async Task IncompleteDraftIsOwnerOnlyAndSubmissionRequiresCompleteContent()
+    {
+        var (school, admin, parent, other) = await SeedAsync();
+        var incomplete = Content(0) with { Pros = null, Cons = null, ReviewText = "" };
+        using var created = await SendAsync(HttpMethod.Post, "/reviews", parent,
+            new { schoolId = school.Id, content = incomplete, saveAsDraft = true });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var draft = (await created.Content.ReadFromJsonAsync<ManagedReviewDto>(JsonOptions))!;
+        Assert.Equal(ReviewStatus.Draft, draft.Status);
+        Assert.Equal("", draft.Content.ReviewText);
+        using var mine = await SendAsync(HttpMethod.Get, "/reviews/mine?status=Draft", parent);
+        Assert.Equal(draft.Id, Assert.Single((await mine.Content.ReadFromJsonAsync<PagedResult<ManagedReviewDto>>(JsonOptions))!.Items).Id);
+        using var publicList = await fixture.Client.GetAsync($"/api/v1/schools/{school.Id}/reviews");
+        Assert.Empty((await publicList.Content.ReadFromJsonAsync<PagedResult<PublicReviewDto>>())!.Items);
+        Assert.Equal(0, (await RatingsAsync(school.Id)).ReviewCount);
+        Assert.Null((await RatingsAsync(school.Id)).OverallScore);
+        using var queue = await SendAsync(HttpMethod.Get, "/reviews/moderation?status=", admin);
+        Assert.Equal(HttpStatusCode.OK, queue.StatusCode);
+        Assert.DoesNotContain((await queue.Content.ReadFromJsonAsync<PagedResult<ManagedReviewDto>>(JsonOptions))!.Items, item => item.Id == draft.Id);
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var repository = scope.ServiceProvider.GetRequiredService<IReviewRepository>();
+            Assert.Equal(0, (await repository.ManagedAsync(null, null, school.Id, 1, default)).TotalCount);
+        }
+        using var draftQueue = await SendAsync(HttpMethod.Get, "/reviews/moderation?status=Draft", admin);
+        Assert.Equal(HttpStatusCode.BadRequest, draftQueue.StatusCode);
+        using var adminHistory = await SendAsync(HttpMethod.Get, $"/reviews/{draft.Id}/history", admin);
+        using var otherHistory = await SendAsync(HttpMethod.Get, $"/reviews/{draft.Id}/history", other);
+        Assert.Equal(HttpStatusCode.NotFound, adminHistory.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, otherHistory.StatusCode);
+        using var approval = await ModerateAsync(draft.Id, 1, true, admin);
+        Assert.Equal(HttpStatusCode.Conflict, approval.StatusCode);
+        using var duplicate = await SendAsync(HttpMethod.Post, "/reviews", parent,
+            new { schoolId = school.Id, content = incomplete, saveAsDraft = true });
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        using var incompleteSubmit = await SendAsync(HttpMethod.Put, $"/reviews/{draft.Id}", parent,
+            new { version = 1, content = incomplete });
+        Assert.Equal(HttpStatusCode.BadRequest, incompleteSubmit.StatusCode);
+        using var ownerHistory = await SendAsync(HttpMethod.Get, $"/reviews/{draft.Id}/history", parent);
+        var first = Assert.Single((await ownerHistory.Content.ReadFromJsonAsync<PagedResult<ReviewHistoryDto>>(JsonOptions))!.Items);
+        Assert.Equal(ReviewStatus.Draft, first.Status);
+        Assert.Equal(1, first.Version);
+        using var submitted = await SendAsync(HttpMethod.Put, $"/reviews/{draft.Id}", parent,
+            new { version = 1, content = Content(4), saveAsDraft = false });
+        Assert.Equal(HttpStatusCode.OK, submitted.StatusCode);
+        var pending = (await submitted.Content.ReadFromJsonAsync<ManagedReviewDto>(JsonOptions))!;
+        Assert.Equal(2, pending.Version);
+        Assert.Equal(ReviewStatus.PendingModeration, pending.Status);
+        using var submittedHistory = await SendAsync(HttpMethod.Get, $"/reviews/{draft.Id}/history", admin);
+        var visible = (await submittedHistory.Content.ReadFromJsonAsync<PagedResult<ReviewHistoryDto>>(JsonOptions))!;
+        Assert.Equal(1, visible.TotalCount);
+        Assert.Equal(2, Assert.Single(visible.Items).Version);
+        Assert.Equal(0, (await RatingsAsync(school.Id)).ReviewCount);
+        using var published = await ModerateAsync(draft.Id, 2, true, admin);
+        Assert.Equal(HttpStatusCode.OK, published.StatusCode);
+        Assert.Equal(4d, (await RatingsAsync(school.Id)).OverallScore);
+    }
+
+    [RequiresPostgreSql]
+    public async Task SavingPublishedReviewAsDraftWithdrawsItAndPrivateHistorySurvivesDeletion()
+    {
+        var (school, admin, parent, _) = await SeedAsync();
+        var review = await CreateAsync(school.Id, parent);
+        using var approved = await ModerateAsync(review.Id, 1, true, admin);
+        Assert.Equal(HttpStatusCode.OK, approved.StatusCode);
+        using var saved = await SendAsync(HttpMethod.Put, $"/reviews/{review.Id}", parent,
+            new { version = 1, content = Content(0) with { ReviewText = "Private notes." }, saveAsDraft = true });
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var draft = (await saved.Content.ReadFromJsonAsync<ManagedReviewDto>(JsonOptions))!;
+        Assert.Equal(ReviewStatus.Draft, draft.Status);
+        Assert.Null(draft.ModerationNotes);
+        Assert.Equal(0, (await RatingsAsync(school.Id)).ReviewCount);
+        using var publicList = await fixture.Client.GetAsync($"/api/v1/schools/{school.Id}/reviews");
+        Assert.Empty((await publicList.Content.ReadFromJsonAsync<PagedResult<PublicReviewDto>>())!.Items);
+        using var hidden = await SendAsync(HttpMethod.Get, $"/reviews/{review.Id}/history", admin);
+        Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
+        using var staleDelete = await SendAsync(HttpMethod.Delete, $"/reviews/{review.Id}?version=1", parent);
+        Assert.Equal(HttpStatusCode.Conflict, staleDelete.StatusCode);
+        using var deleted = await SendAsync(HttpMethod.Delete, $"/reviews/{review.Id}?version=2", parent);
+        Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+        using var history = await SendAsync(HttpMethod.Get, $"/reviews/{review.Id}/history", parent);
+        var versions = (await history.Content.ReadFromJsonAsync<PagedResult<ReviewHistoryDto>>(JsonOptions))!;
+        Assert.Equal(2, versions.TotalCount);
+        Assert.Equal(new[] { ReviewStatus.Draft, ReviewStatus.Published }, versions.Items.Select(item => item.Status));
+        Assert.All(versions.Items, item => Assert.NotNull(item.WithdrawnAt));
+        using var recreated = await SendAsync(HttpMethod.Post, "/reviews", parent,
+            new { schoolId = school.Id, content = Content(0) with { ReviewText = "" }, saveAsDraft = true });
+        Assert.Equal(HttpStatusCode.Created, recreated.StatusCode);
+        var restored = (await recreated.Content.ReadFromJsonAsync<ManagedReviewDto>(JsonOptions))!;
+        Assert.Equal(review.Id, restored.Id);
+        Assert.Equal(3, restored.Version);
+        using var submitted = await SendAsync(HttpMethod.Put, $"/reviews/{review.Id}", parent,
+            new { version = 3, content = Content(5) });
+        Assert.Equal(HttpStatusCode.OK, submitted.StatusCode);
+        using var adminHistory = await SendAsync(HttpMethod.Get, $"/reviews/{review.Id}/history", admin);
+        var visible = (await adminHistory.Content.ReadFromJsonAsync<PagedResult<ReviewHistoryDto>>(JsonOptions))!;
+        Assert.Equal(2, visible.TotalCount);
+        Assert.Equal(new[] { 4, 1 }, visible.Items.Select(item => item.Version));
+        Assert.DoesNotContain(visible.Items, item => item.Status == ReviewStatus.Draft);
+    }
+
+    [RequiresPostgreSql]
+    public async Task ConcurrentDraftSaveAndSubmitPreserveOneNextVersion()
+    {
+        var (school, _, parent, _) = await SeedAsync();
+        using var created = await SendAsync(HttpMethod.Post, "/reviews", parent,
+            new { schoolId = school.Id, content = Content(0) with { ReviewText = "" }, saveAsDraft = true });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var draft = (await created.Content.ReadFromJsonAsync<ManagedReviewDto>(JsonOptions))!;
+        var responses = await Task.WhenAll(
+            SendAsync(HttpMethod.Put, $"/reviews/{draft.Id}", parent,
+                new { version = 1, content = Content(0) with { ReviewText = "Private notes." }, saveAsDraft = true }),
+            SendAsync(HttpMethod.Put, $"/reviews/{draft.Id}", parent,
+                new { version = 1, content = Content(4), saveAsDraft = false }));
+        try
+        {
+            Assert.Single(responses, response => response.StatusCode == HttpStatusCode.OK);
+            Assert.Single(responses, response => response.StatusCode == HttpStatusCode.Conflict);
+            using var scope = fixture.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<SchoolWiseDbContext>();
+            var current = await db.Reviews.SingleAsync(item => item.Id == draft.Id);
+            Assert.Equal(2, current.Version);
+            var versions = await db.ReviewVersions.Where(item => item.ReviewId == draft.Id).ToListAsync();
+            Assert.Equal(2, versions.Count);
+            Assert.Equal(current.Status, versions.Single(item => item.Version == 2).Status);
+            Assert.Equal(0, (await RatingsAsync(school.Id)).ReviewCount);
+        }
+        finally { foreach (var response in responses) response.Dispose(); }
+    }
+
+    [RequiresPostgreSql]
+    public async Task DatabaseEnforcesDraftRatingBoundsInCurrentReviewsAndHistory()
+    {
+        var (school, _, parent, _) = await SeedAsync();
+        foreach (var (saveAsDraft, rating) in new[] { (false, 0), (true, 6) })
+        {
+            using var scope = fixture.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<SchoolWiseDbContext>();
+            db.Reviews.Add(new Review(school.Id, parent.Id, Content(rating).ToContent(), saveAsDraft));
+            var exception = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            Assert.Equal("ck_reviews_ratings", Assert.IsType<Npgsql.PostgresException>(exception.InnerException).ConstraintName);
+        }
+        using var versionScope = fixture.Services.CreateScope();
+        var versionDb = versionScope.ServiceProvider.GetRequiredService<SchoolWiseDbContext>();
+        var current = new Review(school.Id, parent.Id, Content(0).ToContent());
+        var invalidSnapshot = new ReviewVersion(current);
+        current.Resubmit(Content(0).ToContent(), saveAsDraft: true);
+        versionDb.AddRange(current, invalidSnapshot, new ReviewVersion(current));
+        var versionException = await Assert.ThrowsAsync<DbUpdateException>(() => versionDb.SaveChangesAsync());
+        Assert.Equal("ck_review_versions_ratings", Assert.IsType<Npgsql.PostgresException>(versionException.InnerException).ConstraintName);
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     { Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } };
 

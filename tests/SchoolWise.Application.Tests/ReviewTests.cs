@@ -47,5 +47,41 @@ public sealed class ReviewTests
         Assert.False(validator.Validate(valid with { Cons = new string('x', 1001) }).IsValid);
     }
 
+    [Fact]
+    public void IncompleteDraftValidationIsSeparateFromSubmissionAndStillEnforcesBounds()
+    {
+        var content = new ReviewWriteDto(0, 0, 0, 0, 0, 0, null, null, "");
+        var create = new CreateReviewValidator();
+        var edit = new EditReviewValidator();
+        Assert.True(create.Validate(new CreateReviewCommand(Guid.NewGuid(), content, SaveAsDraft: true)).IsValid);
+        Assert.True(edit.Validate(new EditReviewCommand(Guid.NewGuid(), 1, content, SaveAsDraft: true)).IsValid);
+        Assert.False(create.Validate(new CreateReviewCommand(Guid.NewGuid(), content)).IsValid);
+        Assert.False(edit.Validate(new EditReviewCommand(Guid.NewGuid(), 1, content)).IsValid);
+        var draft = new ReviewWriteValidator(saveAsDraft: true);
+        Assert.True(draft.Validate(content with { OverallRating = 5, ReviewText = "Notes" }).IsValid);
+        Assert.False(draft.Validate(content with { SafetyRating = -1 }).IsValid);
+        Assert.False(draft.Validate(content with { TeachingRating = 6 }).IsValid);
+        Assert.False(draft.Validate(content with { ReviewText = new string('x', 5001) }).IsValid);
+        Assert.False(draft.Validate(content with { Pros = new string('x', 1001) }).IsValid);
+        Assert.False(draft.Validate(content with { Cons = new string('x', 1001) }).IsValid);
+    }
+
+    [Fact]
+    public void DraftSnapshotsStayPrivateAndCannotBeModeratedBeforeSubmission()
+    {
+        var review = new Review(Guid.NewGuid(), Guid.NewGuid(), new(0, 0, 0, 0, 0, 0, null, null, ""), saveAsDraft: true);
+        var draft = new ReviewVersion(review);
+        Assert.Equal(ReviewStatus.Draft, draft.Status);
+        Assert.Throws<InvalidOperationException>(() => review.Moderate(1, true));
+        Assert.Throws<InvalidOperationException>(() => draft.Moderate(Guid.NewGuid(), true, null));
+        review.Resubmit(Content("The completed draft is now ready for moderation."));
+        var submitted = new ReviewVersion(review);
+        Assert.Equal(2, review.Version);
+        Assert.Equal(ReviewStatus.PendingModeration, submitted.Status);
+        Assert.Equal(ReviewStatus.Draft, draft.Status);
+        Assert.Equal("", draft.Content.ReviewText);
+        Assert.Null(draft.ReviewedAt);
+    }
+
     private static ReviewContent Content(string text) => new(4, 4, 4, 4, 4, 4, "Helpful communication", null, text);
 }

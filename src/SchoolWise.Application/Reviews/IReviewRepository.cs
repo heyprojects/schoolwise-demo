@@ -16,5 +16,5 @@ public interface IReviewRepository
     Task<SchoolRatingsDto> RatingsAsync(Guid schoolId, CancellationToken cancellationToken);
     Task<PagedResult<ManagedReviewDto>> ManagedAsync(Guid? parentId, ReviewStatus? status, Guid? schoolId, int page,
         CancellationToken cancellationToken);
-    Task<PagedResult<ReviewHistoryDto>> HistoryAsync(Guid reviewId, int page, CancellationToken cancellationToken);
+    Task<PagedResult<ReviewHistoryDto>> HistoryAsync(Guid reviewId, int page, bool includeDrafts, CancellationToken cancellationToken);
 }

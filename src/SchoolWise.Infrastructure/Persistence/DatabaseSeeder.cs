@@ -61,7 +61,8 @@ public sealed class DatabaseSeeder(
             (5, "Thoughtful activities and regular updates.", "A longer collection window would help.",
                 "Our experience of communication and classroom organization has been positive. This fictional submission is waiting for an administrator to review it."),
             (2, "A useful initial introduction.", "The practical information needs more detail.",
-                "This fictional submission needs revision before publication because it does not yet explain the experience clearly enough for another parent.")
+                "This fictional submission needs revision before publication because it does not yet explain the experience clearly enough for another parent."),
+            (0, "", "", "Private draft notes.")
         };
         for (var index = 0; index < experiences.Length; index++)
         {
@@ -79,12 +80,13 @@ public sealed class DatabaseSeeder(
                 if (await context.Reviews.AnyAsync(review => review.UserId == parent.Id && review.SchoolId == school.Id, cancellationToken))
                     continue;
                 var sample = experiences[index];
-                var content = new ReviewContent(sample.Item1, sample.Item1, Math.Min(5, sample.Item1 + 1),
-                    sample.Item1, Math.Max(1, sample.Item1 - 1), sample.Item1, sample.Item2, sample.Item3,
+                var saveAsDraft = index == 6;
+                var content = new ReviewContent(sample.Item1, sample.Item1, saveAsDraft ? 0 : Math.Min(5, sample.Item1 + 1),
+                    sample.Item1, saveAsDraft ? 0 : Math.Max(1, sample.Item1 - 1), sample.Item1, sample.Item2, sample.Item3,
                     $"[SAMPLE - fictional test review] {sample.Item4}");
-                var review = new Review(school.Id, parent.Id, content);
+                var review = new Review(school.Id, parent.Id, content, saveAsDraft);
                 var version = new ReviewVersion(review);
-                if (index != 4)
+                if (index != 4 && !saveAsDraft)
                 {
                     var approved = index < 4;
                     review.Moderate(1, approved);

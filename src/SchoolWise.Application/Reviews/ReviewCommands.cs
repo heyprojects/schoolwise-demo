@@ -6,8 +6,8 @@ using SchoolWise.Domain.Enums;
 
 namespace SchoolWise.Application.Reviews;
 
-public sealed record CreateReviewCommand(Guid SchoolId, ReviewWriteDto Content) : IRequest<Result<ManagedReviewDto>>;
-public sealed record EditReviewCommand(Guid Id, int Version, ReviewWriteDto Content) : IRequest<Result<ManagedReviewDto>>;
+public sealed record CreateReviewCommand(Guid SchoolId, ReviewWriteDto Content, bool SaveAsDraft = false) : IRequest<Result<ManagedReviewDto>>;
+public sealed record EditReviewCommand(Guid Id, int Version, ReviewWriteDto Content, bool SaveAsDraft = false) : IRequest<Result<ManagedReviewDto>>;
 public sealed record DeleteReviewCommand(Guid Id, int Version) : IRequest<Result<bool>>;
 public sealed record ModerateReviewCommand(Guid Id, int Version, bool Approve, string? Notes) : IRequest<Result<bool>>;
 
@@ -16,7 +16,7 @@ public sealed class CreateReviewValidator : AbstractValidator<CreateReviewComman
     public CreateReviewValidator()
     {
         RuleFor(command => command.SchoolId).NotEmpty();
-        RuleFor(command => command.Content).NotNull().SetValidator(new ReviewWriteValidator());
+        RuleFor(command => command.Content).NotNull().SetValidator(command => new ReviewWriteValidator(command.SaveAsDraft));
     }
 }
 
@@ -26,7 +26,7 @@ public sealed class EditReviewValidator : AbstractValidator<EditReviewCommand>
     {
         RuleFor(command => command.Id).NotEmpty();
         RuleFor(command => command.Version).GreaterThan(0);
-        RuleFor(command => command.Content).NotNull().SetValidator(new ReviewWriteValidator());
+        RuleFor(command => command.Content).NotNull().SetValidator(command => new ReviewWriteValidator(command.SaveAsDraft));
     }
 }
 
@@ -67,12 +67,12 @@ public sealed class CreateReviewHandler(ICurrentUser actor, IUserRepository user
             return Result<ManagedReviewDto>.Failure("review_exists", "You already reviewed this school. Edit your review instead.");
         if (review is null)
         {
-            review = new Review(school.Id, user.Id, request.Content.ToContent());
+            review = new Review(school.Id, user.Id, request.Content.ToContent(), request.SaveAsDraft);
             await reviews.AddAsync(review, cancellationToken);
         }
         else
         {
-            review.Resubmit(request.Content.ToContent());
+            review.Resubmit(request.Content.ToContent(), request.SaveAsDraft);
         }
         await reviews.AddVersionAsync(new ReviewVersion(review), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -98,7 +98,7 @@ public sealed class EditReviewHandler(ICurrentUser actor, IUserRepository users,
             return Result<ManagedReviewDto>.Failure("school_not_found", "School is unavailable. You can still delete your review.");
         var previous = await reviews.GetVersionAsync(review.Id, review.Version, cancellationToken);
         previous.Withdraw(DateTimeOffset.UtcNow);
-        review.Resubmit(request.Content.ToContent());
+        review.Resubmit(request.Content.ToContent(), request.SaveAsDraft);
         await reviews.AddVersionAsync(new ReviewVersion(review), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result<ManagedReviewDto>.Success(review.ToDto(school.Name, school.Slug, null));

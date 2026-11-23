@@ -43,6 +43,8 @@ jobs:
       - name: Build
         run: dotnet build SchoolWise.sln --configuration Release --no-restore
       - name: Test
+        env:
+          RUN_POSTGRES_INTEGRATION_TESTS: "1"
         run: dotnet test SchoolWise.sln --configuration Release --no-build --logger trx --results-directory "${{ runner.temp }}/test-results"
       - name: Publish API
         run: dotnet publish src/SchoolWise.Api/SchoolWise.Api.csproj --configuration Release --no-restore --output "${{ runner.temp }}/schoolwise-api"

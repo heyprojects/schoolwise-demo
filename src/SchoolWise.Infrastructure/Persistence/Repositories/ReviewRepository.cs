@@ -73,6 +73,7 @@ public sealed class ReviewRepository(SchoolWiseDbContext context) : IReviewRepos
     {
         var query = context.Reviews.AsNoTracking().Where(review => review.DeletedAt == null);
         if (parentId.HasValue) query = query.Where(review => review.UserId == parentId.Value);
+        else query = query.Where(review => review.Status != ReviewStatus.Draft);
         if (status.HasValue) query = query.Where(review => review.Status == status.Value);
         if (schoolId.HasValue) query = query.Where(review => review.SchoolId == schoolId.Value);
         var count = await query.CountAsync(cancellationToken);
@@ -85,9 +86,10 @@ public sealed class ReviewRepository(SchoolWiseDbContext context) : IReviewRepos
         return new(items, page, 20, count);
     }
 
-    public async Task<PagedResult<ReviewHistoryDto>> HistoryAsync(Guid reviewId, int page, CancellationToken cancellationToken)
+    public async Task<PagedResult<ReviewHistoryDto>> HistoryAsync(Guid reviewId, int page, bool includeDrafts, CancellationToken cancellationToken)
     {
         var query = context.ReviewVersions.AsNoTracking().Where(version => version.ReviewId == reviewId);
+        if (!includeDrafts) query = query.Where(version => version.Status != ReviewStatus.Draft);
         var count = await query.CountAsync(cancellationToken);
         var items = await query.OrderByDescending(version => version.Version).Skip((page - 1) * 20).Take(20)
             .Select(version => new ReviewHistoryDto(version.Version, version.Status, version.Content.ToDto(),

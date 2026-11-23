@@ -105,11 +105,11 @@ Reviews require an active **Parent** account, not a verification code. They are 
 
 | Verb | Path relative to `/api/v1` | Access | Purpose |
 |---|---|---|---|
-| POST | `/reviews` | Parent | Create/submit a review; `201`, initially PendingModeration |
-| PUT | `/reviews/{id}` | Owner Parent | Submit an edited version; `200`, returns to PendingModeration |
+| POST | `/reviews` | Parent | Create a private Draft or submit for moderation; `201` |
+| PUT | `/reviews/{id}` | Owner Parent | Save a private Draft or submit a new version for moderation; `200` |
 | DELETE | `/reviews/{id}?version=N` | Owner Parent | Immediately withdraw; `204`, preserves private history |
 | GET | `/reviews/mine?status=Published&schoolId={id}&page=1` | Parent | Own current, non-deleted reviews; filters optional |
-| GET | `/reviews/{id}/history?page=1` | Owner or Admin | Private content/version/decision history, including withdrawn versions |
+| GET | `/reviews/{id}/history?page=1` | Owner or Admin | Owner sees all snapshots; Admin sees submitted snapshots only, and never a currently Draft review |
 | GET | `/reviews/moderation?status=PendingModeration&page=1` | Admin | Moderation queue; optional status Published/Rejected |
 | POST | `/reviews/{id}/moderation` | Admin | Approve or reject exactly the displayed pending version |
 | GET | `/schools/{id}/reviews?page=1&pageSize=10&rating=5&sort=newest` | Anonymous | Published-only list, optional exact overall rating |
@@ -134,11 +134,29 @@ Create body:
 }
 ```
 
-All six ratings are required integers 1-5. `pros`/`cons` are optional (max 1,000 characters); `reviewText` has 20-5,000 trimmed characters. Content is plain text and rendered escaped, never as HTML.
+Submission requires all six integer ratings 1-5 and at least 20 trimmed characters in `reviewText` (maximum 5,000 input characters). `pros`/`cons` are optional (max 1,000 characters). Content is plain text and rendered escaped, never as HTML.
 
-Edit uses `{ "version": 1, "content": { ...same fields... } }`. Moderation uses `{ "version": 1, "approve": true, "notes": "Optional note" }`; `approve=false` requires a nonblank parent-visible reason (max 1,000 characters). Notes are **not confidential internal notes**; the moderation UI states that the author can see them. The database retains the decision actor and time.
+Create and edit accept optional `"saveAsDraft": true`. Omitted or `false` preserves the existing submission behavior (`PendingModeration`); clients cannot set status directly. A Draft permits integer ratings 0-5, where **0 means not selected, not a zero-star rating**, and an empty or short `reviewText`. Send `""` for missing text and `0` for missing ratings; null text and negative/out-of-range ratings are invalid. Text and Pros/Cons maximum lengths still apply. For example:
 
-One review identity per Parent/school is enforced by a unique database constraint. Duplicate submission returns `409 review_exists`. After deletion, a fresh POST reuses that identity with a new version and preserves earlier snapshots. All edits temporarily remove any published content/score until the new version is approved. Stale edits/deletes/decisions or concurrent writes return `409`; reload before retrying. Other parents receive `404` for inaccessible IDs; anonymous writes receive `401`, wrong roles `403`. Review create/edit is limited to 20 requests per account per ten minutes (single-process limiter).
+```json
+{
+  "schoolId": "<approved-school-uuid>",
+  "saveAsDraft": true,
+  "content": {
+    "overallRating": 4, "teachingRating": 0, "safetyRating": 0,
+    "communicationRating": 0, "facilitiesRating": 0, "activitiesRating": 0,
+    "pros": null, "cons": null, "reviewText": ""
+  }
+}
+```
+
+Save and submit both create immutable, incrementing content snapshots. To submit an existing Draft, PUT its latest `version`, complete content and `saveAsDraft=false`; incomplete submission returns `400` without changing the Draft or adding history. Drafts cannot be moderated and have no effect on public listings, counts or category scores. `GET /reviews/mine?status=Draft` includes only the requesting Parent's drafts.
+
+Draft content is author-only, including historical snapshots after submission or deletion. Admin queries exclude Drafts before counting/paging; `status=Draft` on the moderation endpoint returns `400`. Admin history access to a currently Draft review returns `404`; when its current state is submitted, Admin history excludes all prior Draft snapshots before counting/paging. Owners retain the complete history. There is no public history endpoint.
+
+Edit uses `{ "version": 1, "content": { ...same fields... }, "saveAsDraft": false }`. Moderation uses `{ "version": 1, "approve": true, "notes": "Optional note" }`; `approve=false` requires a nonblank parent-visible reason (max 1,000 characters). Notes are **not confidential internal notes**; the moderation UI states that the author can see them. The database retains the decision actor and time.
+
+One review identity per Parent/school, including Drafts, is enforced by a unique database constraint. Duplicate creation returns `409 review_exists`. After deletion, a fresh POST reuses that identity with a new version and preserves earlier snapshots. All edits, including saving as Draft, immediately remove any published content/score until a new submission is approved. Stale edits/deletes/decisions or concurrent writes return `409`; reload before retrying. Other parents receive `404` for inaccessible IDs; anonymous writes receive `401`, wrong roles `403`. Review create/edit, including Draft saves, is limited to 20 requests per account per ten minutes (single-process limiter).
 
 Public reviews return `id`, `content` and `publishedAt`, never author/account IDs, emails, notes or version history. Private managed rows additionally contain school ID/name/slug, version, status, updatedAt and the current moderation note. Private queues/history use the existing paged envelope with fixed page size 20.
 

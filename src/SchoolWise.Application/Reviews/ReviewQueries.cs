@@ -36,6 +36,8 @@ public sealed class ListManagedReviewsValidator : AbstractValidator<ListManagedR
     {
         RuleFor(query => query.Page).InclusiveBetween(1, 100000);
         RuleFor(query => query.Status).IsInEnum().When(query => query.Status.HasValue);
+        RuleFor(query => query.Status).Must(status => status != ReviewStatus.Draft).When(query => query.Admin)
+            .WithMessage("Draft reviews are private to their author.");
         RuleFor(query => query.SchoolId).NotEmpty().When(query => query.SchoolId.HasValue);
     }
 }
@@ -94,8 +96,9 @@ public sealed class ReviewHistoryHandler(ICurrentUser actor, IUserRepository use
         if (user is null || !user.IsActive)
             return Result<PagedResult<ReviewHistoryDto>>.Failure("forbidden", "An active account is required.");
         var review = await reviews.GetAsync(request.Id, cancellationToken);
-        if (review is null || (user.Role != UserRole.Admin && review.UserId != user.Id))
+        if (review is null || (review.UserId != user.Id && (user.Role != UserRole.Admin || review.Status == ReviewStatus.Draft)))
             return Result<PagedResult<ReviewHistoryDto>>.Failure("review_not_found", "Review not found.");
-        return Result<PagedResult<ReviewHistoryDto>>.Success(await reviews.HistoryAsync(review.Id, request.Page, cancellationToken));
+        return Result<PagedResult<ReviewHistoryDto>>.Success(await reviews.HistoryAsync(review.Id, request.Page,
+            includeDrafts: review.UserId == user.Id, cancellationToken));
     }
 }
