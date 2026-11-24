@@ -91,7 +91,7 @@ body { background: #fff; color: #172a35; font-family: Arial, Helvetica, sans-ser
 .nav-link { transition: color .18s ease; }
 .nav-link:hover { color: #0c7763; }
 .hero-section { overflow: hidden; background: radial-gradient(ellipse at 82% 25%, #e1f3eb 0, transparent 38%), linear-gradient(180deg, #f8fbf9 0%, #fff 100%); }
-.hero-section h1 { font-size: clamp(2.7rem, 6vw, 4.5rem); }
+.hero-section h1 { font-size: clamp(2.5rem, 5.3vw, 4rem); }
 .search-panel { display: flex; min-height: 76px; align-items: center; gap: 16px; border: 1px solid #e0e9e5; border-radius: 18px; background: white; padding: 12px; box-shadow: 0 15px 40px rgb(22 66 54 / 9%); }
 .search-panel input { width: 100%; min-width: 0; border: 0; outline: 0; color: #172a35; font-size: 14px; }
 .search-panel input::placeholder { color: #9ba8a5; }
