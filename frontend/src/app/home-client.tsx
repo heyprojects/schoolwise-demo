@@ -36,7 +36,7 @@ export default function HomeClient({ initialSchools }: { initialSchools: PageRes
           <div className="relative z-10">
             <div className="eyebrow"><Sparkles size={14} />{" "}{t("A clearer way to choose")}</div>
             <h1 className="mt-6 max-w-2xl text-5xl font-bold leading-[1.05] tracking-[-.045em] text-slate-950 sm:text-6xl">
-              {t("Find the right school for your child.")}
+              {t("Find the")}{" "}<span className="text-teal-700">{t("right school")}</span>{" "}{t("for your child.")}
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">{t("Explore schools across Greece, compare the details that matter, and make your next step with confidence.")}</p>
             <form onSubmit={submitSearch} className="search-panel mt-9">
