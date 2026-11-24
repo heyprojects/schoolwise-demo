@@ -25,7 +25,7 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <div className="container-shell grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 py-4 lg:grid lg:min-h-[76px] lg:grid-cols-[auto_minmax(0,1fr)_6.75rem_18rem] lg:gap-x-6 lg:py-0 xl:grid-cols-[auto_minmax(0,1fr)_6.75rem_24rem]">
+      <div className="container-shell grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 py-4 lg:grid lg:min-h-[76px] lg:grid-cols-[auto_minmax(0,1fr)_5.625rem_18rem] lg:gap-x-6 lg:py-0 xl:grid-cols-[auto_minmax(0,1fr)_5.625rem_24rem]">
         <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight text-slate-950">
           <span className="brand-mark"><School size={21} strokeWidth={2.2} /></span>
           <span className="text-xl">SchoolWise</span>
@@ -38,7 +38,7 @@ export function SiteHeader() {
           role="group"
           aria-label={t("Language")}
           aria-busy={changing}
-          className="col-start-2 row-start-1 inline-flex w-[6.75rem] shrink-0 justify-self-end rounded-lg border border-slate-200 bg-white p-1 lg:col-start-3 lg:row-start-1 lg:justify-self-center"
+          className="col-start-2 row-start-1 inline-flex w-[5.625rem] shrink-0 justify-self-end rounded-lg border border-slate-200 bg-white p-1 lg:col-start-3 lg:row-start-1 lg:justify-self-center"
         >
           {languages.map(language => (
             <button
@@ -50,7 +50,7 @@ export function SiteHeader() {
               aria-pressed={locale === language.value}
               disabled={changing}
               onClick={() => changeLocale(language.value)}
-              className={`h-12 w-12 shrink-0 cursor-pointer rounded-md p-0 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-wait disabled:opacity-60 ${locale === language.value ? "bg-teal-700 text-white" : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"}`}
+              className={`h-10 w-10 shrink-0 cursor-pointer rounded-md p-0 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-wait disabled:opacity-60 ${locale === language.value ? "bg-teal-700 text-white" : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"}`}
             >
               {language.label}
             </button>
