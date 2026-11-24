@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/components/providers/language-provider";
+
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +22,7 @@ function schoolYearEnd() {
 }
 
 export default function AdminVerificationsPage() {
+  const { t, message, date } = useLanguage();
   const { user, loading } = useAuth();
   const client = useQueryClient();
   const [schoolSearch, setSchoolSearch] = useState("");
@@ -54,8 +57,8 @@ export default function AdminVerificationsPage() {
     onSuccess: () => client.invalidateQueries({ queryKey: ["verification-codes"] }),
   });
 
-  if (loading) return <div className="container-shell py-16">Checking administrator access...</div>;
-  if (!allowed) return <div className="container-shell py-16"><h1>Administrator access required</h1><Link href="/login">Log in</Link></div>;
+  if (loading) return <div className="container-shell py-16">{t("Checking administrator access...")}</div>;
+  if (!allowed) return <div className="container-shell py-16"><h1>{t("Administrator access required")}</h1><Link href="/login">{t("Log in")}</Link></div>;
   const error = issue.error ?? revoke.error ?? schools.error ?? codes.error;
   const shownCodes = issued?.userId === user.id && issued.schoolId === schoolId ? issued.codes : [];
 
@@ -67,39 +70,39 @@ export default function AdminVerificationsPage() {
 
   return (
     <div className="container-shell space-y-6 py-10">
-      <div><p className="eyebrow">Administration</p><h1 className="mt-3 text-3xl font-bold">School verification codes</h1></div>
-      <p>Demo foundation only. Issue codes only for an agreed partner-school pilot. A code is not an identity check or a guarantee that a review is true.</p>
-      <Link href="/admin/schools" className="nav-link">Manage schools</Link>
-      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-800">{getErrorMessage(error)}</p>}
+      <div><p className="eyebrow">{t("Administration")}</p><h1 className="mt-3 text-3xl font-bold">{t("School verification codes")}</h1></div>
+      <p>{t("Demo foundation only. Issue codes only for an agreed partner-school pilot. A code is not an identity check or a guarantee that a review is true.")}</p>
+      <Link href="/admin/schools" className="nav-link">{t("Manage schools")}</Link>
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-800">{message(getErrorMessage(error))}</p>}
       <form onSubmit={submit} className="max-w-xl space-y-4 rounded-xl border p-5">
-        <div><Label htmlFor="school-search">Search approved schools</Label><Input id="school-search" value={schoolSearch} onChange={(event) => setSchoolSearch(event.target.value)} /></div>
-        <div><Label htmlFor="school">School</Label><select id="school" required className="mt-2 w-full rounded-md border p-2" value={schoolId} onChange={(event) => {
+        <div><Label htmlFor="school-search">{t("Search approved schools")}</Label><Input id="school-search" value={schoolSearch} onChange={(event) => setSchoolSearch(event.target.value)} /></div>
+        <div><Label htmlFor="school">{t("School")}</Label><select id="school" required className="mt-2 w-full rounded-md border p-2" value={schoolId} onChange={(event) => {
           setSchoolId(event.target.value); setPage(1); setIssued(null); issue.reset(); revoke.reset();
-        }}><option value="">Select a school</option>{schools.data?.items.map((school) => <option key={school.id} value={school.id}>{school.name} ({school.city})</option>)}</select></div>
-        <div><Label htmlFor="count">Number of single-use codes (1-50)</Label><Input id="count" type="number" min={1} max={50} required value={count} onChange={(event) => setCount(event.target.valueAsNumber)} /></div>
-        <div><Label htmlFor="expires">Redeem before (UTC, within 30 days)</Label><Input id="expires" type="date" required value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} /></div>
-        <div><Label htmlFor="valid-until">Parent eligibility valid until (UTC)</Label><Input id="valid-until" type="date" required value={validUntil} onChange={(event) => setValidUntil(event.target.value)} /><p className="text-sm text-slate-500">Use the agreed school-year cutoff, never more than 12 months. Eligibility must not end before code expiry.</p></div>
-        <Button type="submit" disabled={!schoolId || issue.isPending}>{issue.isPending ? "Issuing..." : "Issue codes"}</Button>
+        }}><option value="">{t("Select a school")}</option>{schools.data?.items.map((school) => <option key={school.id} value={school.id}>{school.name} ({school.city})</option>)}</select></div>
+        <div><Label htmlFor="count">{t("Number of single-use codes (1-50)")}</Label><Input id="count" type="number" min={1} max={50} required value={count} onChange={(event) => setCount(event.target.valueAsNumber)} /></div>
+        <div><Label htmlFor="expires">{t("Redeem before (UTC, within 30 days)")}</Label><Input id="expires" type="date" required value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} /></div>
+        <div><Label htmlFor="valid-until">{t("Parent eligibility valid until (UTC)")}</Label><Input id="valid-until" type="date" required value={validUntil} onChange={(event) => setValidUntil(event.target.value)} /><p className="text-sm text-slate-500">{t("Use the agreed school-year cutoff, never more than 12 months. Eligibility must not end before code expiry.")}</p></div>
+        <Button type="submit" disabled={!schoolId || issue.isPending}>{issue.isPending ? t("Issuing...") : t("Issue codes")}</Button>
       </form>
       {shownCodes.length > 0 && <section className="space-y-3 rounded-xl border border-amber-300 p-5">
-        <h2 className="text-xl font-semibold">Copy now: codes are shown only once</h2>
-        <p>Store and distribute securely through the school. Do not paste these codes in chat, logs or public pages. Leaving this screen loses the plaintext codes.</p>
-        <textarea aria-label="Issued verification codes" readOnly className="h-48 w-full rounded border p-3 font-mono text-sm" value={shownCodes.map((code) => `${code.id}\t${code.code}`).join("\n")} />
-        <Button type="button" variant="outline" onClick={() => setIssued(null)}>Hide codes</Button>
+        <h2 className="text-xl font-semibold">{t("Copy now: codes are shown only once")}</h2>
+        <p>{t("Store and distribute securely through the school. Do not paste these codes in chat, logs or public pages. Leaving this screen loses the plaintext codes.")}</p>
+        <textarea aria-label={t("Issued verification codes")} readOnly className="h-48 w-full rounded border p-3 font-mono text-sm" value={shownCodes.map((code) => `${code.id}\t${code.code}`).join("\n")} />
+        <Button type="button" variant="outline" onClick={() => setIssued(null)}>{t("Hide codes")}</Button>
       </section>}
       {schoolId && <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Code history</h2>
-        <p>Revoking a redeemed code also ends the eligibility granted by that code.</p>
-        <div className="max-w-xl"><Label htmlFor="reason">Reason for revocation (required)</Label><Input id="reason" maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} /></div>
-        {codes.isPending && <p>Loading code history...</p>}
-        {codes.data?.items.length === 0 && <p>No codes issued yet.</p>}
+        <h2 className="text-xl font-semibold">{t("Code history")}</h2>
+        <p>{t("Revoking a redeemed code also ends the eligibility granted by that code.")}</p>
+        <div className="max-w-xl"><Label htmlFor="reason">{t("Reason for revocation (required)")}</Label><Input id="reason" maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} /></div>
+        {codes.isPending && <p>{t("Loading code history...")}</p>}
+        {codes.data?.items.length === 0 && <p>{t("No codes issued yet.")}</p>}
         <ul className="space-y-3">{codes.data?.items.map((code) => <li key={code.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
-          <div><p className="break-all font-mono text-sm">{code.id}</p><p>{code.revokedAt ? "Revoked" : code.redeemedAt ? "Redeemed" : new Date(code.expiresAt).getTime() <= Date.now() ? "Expired" : "Available"}</p><p className="text-sm text-slate-500">Redeem before {new Date(code.expiresAt).toLocaleDateString(undefined, { timeZone: "UTC" })} / eligibility until {new Date(code.validUntil).toLocaleDateString(undefined, { timeZone: "UTC" })} (UTC)</p></div>
+          <div><p className="break-all font-mono text-sm">{code.id}</p><p>{code.revokedAt ? t("Revoked") : code.redeemedAt ? t("Redeemed") : new Date(code.expiresAt).getTime() <= Date.now() ? t("Expired") : t("Available")}</p><p className="text-sm text-slate-500">{t("Redeem before {date} / eligibility until {until} (UTC)", { date: date(code.expiresAt, { timeZone: "UTC" }), until: date(code.validUntil, { timeZone: "UTC" }) })}</p></div>
           <Button type="button" variant="outline" disabled={Boolean(code.revokedAt) || !reason.trim() || revoke.isPending} onClick={() => {
-            if (window.confirm("Revoke this code and any eligibility it granted?")) revoke.mutate({ id: code.id, reason: reason.trim() });
-          }}>Revoke</Button>
+            if (window.confirm(t("Revoke this code and any eligibility it granted?"))) revoke.mutate({ id: code.id, reason: reason.trim() });
+          }}>{t("Revoke")}</Button>
         </li>)}</ul>
-        <div className="flex items-center gap-4"><Button type="button" variant="outline" disabled={page === 1 || codes.isFetching} onClick={() => setPage(page - 1)}>Previous</Button><span>Page {page}</span><Button type="button" variant="outline" disabled={!codes.data || page * codes.data.pageSize >= codes.data.totalCount || codes.isFetching} onClick={() => setPage(page + 1)}>Next</Button></div>
+        <div className="flex items-center gap-4"><Button type="button" variant="outline" disabled={page === 1 || codes.isFetching} onClick={() => setPage(page - 1)}>{t("Previous")}</Button><span>{t("Page {page}", { page })}</span><Button type="button" variant="outline" disabled={!codes.data || page * codes.data.pageSize >= codes.data.totalCount || codes.isFetching} onClick={() => setPage(page + 1)}>{t("Next")}</Button></div>
       </section>}
     </div>
   );

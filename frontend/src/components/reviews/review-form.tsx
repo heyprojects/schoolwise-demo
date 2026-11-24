@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/components/providers/language-provider";
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -12,14 +14,14 @@ const rating = z.number().int().min(1, "Choose a rating for every category.").ma
 const schema = z.object({
   overallRating: rating, teachingRating: rating, safetyRating: rating,
   communicationRating: rating, facilitiesRating: rating, activitiesRating: rating,
-  pros: z.string().max(1000).nullable(), cons: z.string().max(1000).nullable(),
-  reviewText: z.string().trim().min(20, "Write at least 20 characters about your experience.").max(5000),
+  pros: z.string().max(1000, "Use at most 1,000 characters.").nullable(), cons: z.string().max(1000, "Use at most 1,000 characters.").nullable(),
+  reviewText: z.string().trim().min(20, "Write at least 20 characters about your experience.").max(5000, "Use at most 5,000 characters."),
 });
 const draftRating = z.number().int().min(0).max(5);
 const draftSchema = schema.extend({
   overallRating: draftRating, teachingRating: draftRating, safetyRating: draftRating,
   communicationRating: draftRating, facilitiesRating: draftRating, activitiesRating: draftRating,
-  reviewText: z.string().trim().max(5000),
+  reviewText: z.string().trim().max(5000, "Use at most 5,000 characters."),
 });
 const blank: ReviewContent = {
   overallRating: 0, teachingRating: 0, safetyRating: 0, communicationRating: 0, facilitiesRating: 0,
@@ -29,6 +31,7 @@ const blank: ReviewContent = {
 export function ReviewForm({ schoolId, existing, onSaved }: {
   schoolId: string; existing?: ManagedReview; onSaved?: (review: ManagedReview) => void;
 }) {
+  const { t, message } = useLanguage();
   const client = useQueryClient();
   const [content, setContent] = useState<ReviewContent>(() => existing?.content ?? blank);
   const [validation, setValidation] = useState("");
@@ -46,24 +49,24 @@ export function ReviewForm({ schoolId, existing, onSaved }: {
     saveContent(false);
   }
   return <form onSubmit={submit} className="space-y-5 rounded-xl border border-slate-200 p-5">
-    <h3 className="text-xl font-semibold">{existing?.status === "Draft" ? "Continue your draft" : existing ? "Edit your review" : "Write a review"}</h3>
-    <p className="text-sm text-slate-600">Share your own experience. Do not include child names, identifying details about staff, contact information or sensitive personal data. Every submission is moderated.</p>
-    <p className="text-sm text-slate-600">Drafts can be incomplete and are visible only to you. Submit when all ratings and your experience are ready.</p>
-    {existing?.status === "Published" && <p className="rounded-lg bg-amber-50 p-3 text-sm">Saving changes, including a draft, removes the published review and its rating until an admin approves a new submission. Earlier versions remain in your history.</p>}
+    <h3 className="text-xl font-semibold">{existing?.status === "Draft" ? t("Continue your draft") : existing ? t("Edit your review") : t("Write a review")}</h3>
+    <p className="text-sm text-slate-600">{t("Share your own experience. Do not include child names, identifying details about staff, contact information or sensitive personal data. Every submission is moderated.")}</p>
+    <p className="text-sm text-slate-600">{t("Drafts can be incomplete and are visible only to you. Submit when all ratings and your experience are ready.")}</p>
+    {existing?.status === "Published" && <p className="rounded-lg bg-amber-50 p-3 text-sm">{t("Saving changes, including a draft, removes the published review and its rating until an admin approves a new submission. Earlier versions remain in your history.")}</p>}
     <div className="grid gap-4 sm:grid-cols-2">{ratingFields.map(([field, label]) => <div key={field}>
-      <Label htmlFor={`review-${field}`}>{label} rating</Label>
+      <Label htmlFor={`review-${field}`}>{t("{category} rating", { category: t(label) })}</Label>
       <select id={`review-${field}`} required className="mt-2 w-full rounded-md border p-2" value={content[field] || ""}
         onChange={(event) => setContent({ ...content, [field]: Number(event.target.value) })}>
-        <option value="">Select 1-5</option>{[1, 2, 3, 4, 5].map(value => <option key={value} value={value}>{value} / 5</option>)}
+        <option value="">{t("Select 1-5")}</option>{[1, 2, 3, 4, 5].map(value => <option key={value} value={value}>{value} / 5</option>)}
       </select>
     </div>)}</div>
-    <div><Label htmlFor="review-pros">Pros (optional)</Label><textarea id="review-pros" maxLength={1000} className="mt-2 min-h-20 w-full rounded-md border p-3" value={content.pros ?? ""} onChange={(event) => setContent({ ...content, pros: event.target.value })} /></div>
-    <div><Label htmlFor="review-cons">Cons (optional)</Label><textarea id="review-cons" maxLength={1000} className="mt-2 min-h-20 w-full rounded-md border p-3" value={content.cons ?? ""} onChange={(event) => setContent({ ...content, cons: event.target.value })} /></div>
-    <div><Label htmlFor="review-text">Your experience</Label><textarea id="review-text" required minLength={20} maxLength={5000} className="mt-2 min-h-36 w-full rounded-md border p-3" value={content.reviewText} onChange={(event) => setContent({ ...content, reviewText: event.target.value })} /><p className="text-xs text-slate-500">20-5,000 characters to submit. Drafts may be shorter or empty.</p></div>
-    {(validation || save.error) && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-800">{validation || getErrorMessage(save.error)}</p>}
+    <div><Label htmlFor="review-pros">{t("Pros (optional)")}</Label><textarea id="review-pros" maxLength={1000} className="mt-2 min-h-20 w-full rounded-md border p-3" value={content.pros ?? ""} onChange={(event) => setContent({ ...content, pros: event.target.value })} /></div>
+    <div><Label htmlFor="review-cons">{t("Cons (optional)")}</Label><textarea id="review-cons" maxLength={1000} className="mt-2 min-h-20 w-full rounded-md border p-3" value={content.cons ?? ""} onChange={(event) => setContent({ ...content, cons: event.target.value })} /></div>
+    <div><Label htmlFor="review-text">{t("Your experience")}</Label><textarea id="review-text" required minLength={20} maxLength={5000} className="mt-2 min-h-36 w-full rounded-md border p-3" value={content.reviewText} onChange={(event) => setContent({ ...content, reviewText: event.target.value })} /><p className="text-xs text-slate-500">{t("20-5,000 characters to submit. Drafts may be shorter or empty.")}</p></div>
+    {(validation || save.error) && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-800">{message(validation || getErrorMessage(save.error))}</p>}
     <div className="flex flex-wrap gap-3">
-      <Button type="button" variant="outline" disabled={save.isPending} onClick={() => saveContent(true)}>Save draft</Button>
-      <Button type="submit" disabled={save.isPending}>{save.isPending ? "Saving..." : existing && existing.status !== "Draft" ? "Submit updated review" : "Submit review"}</Button>
+      <Button type="button" variant="outline" disabled={save.isPending} onClick={() => saveContent(true)}>{t("Save draft")}</Button>
+      <Button type="submit" disabled={save.isPending}>{save.isPending ? t("Saving...") : existing && existing.status !== "Draft" ? t("Submit updated review") : t("Submit review")}</Button>
     </div>
   </form>;
 }

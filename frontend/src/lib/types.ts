@@ -90,10 +90,10 @@ export const schoolTypes: SchoolType[] = [
   "HighSchool",
 ];
 
-export const schoolTypeLabels: Record<SchoolType, string> = {
+export const schoolTypeLabels = {
   Nursery: "Nursery",
   Kindergarten: "Kindergarten",
   Elementary: "Elementary",
   MiddleSchool: "Middle school",
   HighSchool: "High school",
-};
+} as const satisfies Record<SchoolType, string>;

@@ -60,12 +60,12 @@ export const ratingFields = [
   ["activitiesRating", "Activities", "activitiesScore"],
 ] as const;
 
-export const reviewStatusLabels: Record<ReviewStatus, string> = {
+export const reviewStatusLabels = {
   Draft: "Draft (private)",
   PendingModeration: "Pending moderation",
   Published: "Published",
   Rejected: "Rejected",
-};
+} as const satisfies Record<ReviewStatus, string>;
 
 export async function fetchSchoolReviews(schoolId: string, page: number, rating: number | null, sort: string) {
   const { data } = await api.get<PageResult<PublicReview>>(`/schools/${schoolId}/reviews`, {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/components/providers/language-provider";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
@@ -10,9 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/api";
 
-const schema = z.object({ email: z.email(), password: z.string().min(1) });
+const schema = z.object({ email: z.email("Enter a valid email address."), password: z.string().min(1, "Enter a valid email and password.") });
 
 export default function LoginPage() {
+  const { t, message } = useLanguage();
   const { login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -35,5 +38,5 @@ export default function LoginPage() {
     }
   }
 
-  return <div className="auth-page"><div className="auth-card"><div className="text-center"><p className="eyebrow justify-center">Welcome back</p><h1>Log in to SchoolWise</h1><p>Continue exploring schools for your family.</p></div><form className="mt-8 space-y-5" onSubmit={submit}><div className="space-y-2"><Label htmlFor="email">Email address</Label><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></div><div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></div>{error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}<Button type="submit" className="h-11 w-full" disabled={submitting}>{submitting ? "Signing in…" : "Log in"}</Button></form><p className="mt-6 text-center text-sm text-slate-500">New to SchoolWise? <Link href="/register" className="font-semibold text-teal-700 hover:underline">Create an account</Link></p></div></div>;
+  return <div className="auth-page"><div className="auth-card"><div className="text-center"><p className="eyebrow justify-center">{t("Welcome back")}</p><h1>{t("Log in to SchoolWise")}</h1><p>{t("Continue exploring schools for your family.")}</p></div><form className="mt-8 space-y-5" onSubmit={submit}><div className="space-y-2"><Label htmlFor="email">{t("Email address")}</Label><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></div><div className="space-y-2"><Label htmlFor="password">{t("Password")}</Label><Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></div>{error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{message(error)}</p>}<Button type="submit" className="h-11 w-full" disabled={submitting}>{submitting ? t("Signing in…") : t("Log in")}</Button></form><p className="mt-6 text-center text-sm text-slate-500">{t("New to SchoolWise?")}{" "}<Link href="/register" className="font-semibold text-teal-700 hover:underline">{t("Create an account")}</Link></p></div></div>;
 }

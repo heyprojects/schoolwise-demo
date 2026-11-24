@@ -3,8 +3,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { LanguageProvider } from "@/components/providers/language-provider";
+import type { Locale } from "@/lib/i18n";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, locale }: { children: React.ReactNode; locale: Locale }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -15,8 +17,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
-    </QueryClientProvider>
+    <LanguageProvider initialLocale={locale}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }

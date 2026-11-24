@@ -60,6 +60,14 @@ npm run dev
 
 Use Node.js 20.19 or later. Copy `frontend/.env.example` to `frontend/.env.local` if the API is hosted at a non-default URL. The default local API URL is `http://localhost:8080/api/v1`.
 
+## Website languages
+
+Greek is the default website language. The header offers **Ελληνικά / English** on desktop and mobile, including Parent and Admin pages. The preference is stored in the `schoolwise-locale` first-party cookie for one year and applies on navigation and reload; the server renders the matching document language and metadata. Switching language preserves the active account, filters and in-progress forms. Existing URLs and API enum values do not change.
+
+Interface labels, review statuses, known system/validation messages, dates, ratings and tuition formatting are localized through the typed dictionary in `frontend/src/lib/i18n.ts`. School names, locations, source descriptions, contact details, parent reviews and moderation notes stay in their original language. Unknown server diagnostics remain visible in their original form rather than being hidden or automatically translated. Browser-native validation prompts follow the browser's own language settings.
+
+No localization service, database migration or automatic content translation is involved. Run `npm test` in `frontend` for locale resolution, dictionary/placeholder consistency, diagnostics and tuition-formatting checks.
+
 ## Solution layout
 
 ```text
@@ -108,6 +116,7 @@ Frontend:
 Set-Location frontend
 npm ci
 npm run lint
+npm test
 npm run build
 ```
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/components/providers/language-provider";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,6 +32,7 @@ function toInput(school: School): SchoolWriteInput {
 }
 
 export default function AdminSchoolsPage() {
+  const { t, message } = useLanguage();
   const { user, loading } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -60,8 +63,8 @@ export default function AdminSchoolsPage() {
     onError: (reason) => setError(getErrorMessage(reason)),
   });
 
-  if (loading || !user) return <div className="container-shell py-16 text-slate-500">Checking administrator access…</div>;
-  if (user.role !== "Admin") return <div className="container-shell py-16"><div className="empty-state"><h1>Administrator access required</h1><p>Your account cannot manage school listings.</p></div></div>;
+  if (loading || !user) return <div className="container-shell py-16 text-slate-500">{t("Checking administrator access…")}</div>;
+  if (user.role !== "Admin") return <div className="container-shell py-16"><div className="empty-state"><h1>{t("Administrator access required")}</h1><p>{t("Your account cannot manage school listings.")}</p></div></div>;
 
   function beginEdit(school: SchoolListItem) {
     setEditingId(school.id); setForm({ ...emptyForm }); setEditorOpen(true); setError("");
@@ -76,22 +79,22 @@ export default function AdminSchoolsPage() {
 
   return (
     <div className="container-shell py-10 sm:py-14">
-      <div className="flex flex-wrap items-end justify-between gap-5"><div><p className="eyebrow">Administration</p><h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">School listings</h1><p className="mt-3 text-slate-600">Create, edit, approve, and remove schools in the directory.</p></div><Button onClick={() => { setEditingId(null); setForm({ ...emptyForm }); setEditorOpen(true); setError(""); }}><Plus size={17} /> Add school</Button></div>
-      {error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 p-4 text-sm text-rose-800">{error}</p>}
-      {query.isError && <p role="alert" className="mt-5 rounded-xl bg-rose-50 p-4 text-sm text-rose-800">Could not load school listings.</p>}
+      <div className="flex flex-wrap items-end justify-between gap-5"><div><p className="eyebrow">{t("Administration")}</p><h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">{t("School listings")}</h1><p className="mt-3 text-slate-600">{t("Create, edit, approve, and remove schools in the directory.")}</p></div><Button onClick={() => { setEditingId(null); setForm({ ...emptyForm }); setEditorOpen(true); setError(""); }}><Plus size={17} />{" "}{t("Add school")}</Button></div>
+      {error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 p-4 text-sm text-rose-800">{message(error)}</p>}
+      {query.isError && <p role="alert" className="mt-5 rounded-xl bg-rose-50 p-4 text-sm text-rose-800">{t("Could not load school listings.")}</p>}
       <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <Table><TableHeader><TableRow><TableHead>School</TableHead><TableHead>City</TableHead><TableHead>Type</TableHead><TableHead>Ownership</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{query.data?.items.map((school) => <TableRow key={school.id}><TableCell className="font-semibold text-slate-900">{school.name}</TableCell><TableCell>{school.city}</TableCell><TableCell>{schoolTypeLabels[school.schoolType]}</TableCell><TableCell>{school.isPrivate ? "Private" : "Public"}</TableCell><TableCell><span className={`status-pill ${school.isApproved ? "status-approved" : "status-draft"}`}>{school.isApproved ? "Approved" : "Draft"}</span></TableCell><TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" onClick={() => beginEdit(school)} aria-label={`Edit ${school.name}`}><Pencil size={15} /></Button><Button variant="outline" size="sm" className="text-rose-700 hover:bg-rose-50" onClick={() => { if (window.confirm(`Delete ${school.name}?`)) remove.mutate(school.id); }} aria-label={`Delete ${school.name}`}><Trash2 size={15} /></Button></div></TableCell></TableRow>)}{query.data?.items.length === 0 && <TableRow><TableCell colSpan={6} className="py-12 text-center text-slate-500">No listings yet. Add the first school to the directory.</TableCell></TableRow>}</TableBody></Table>
+        <Table><TableHeader><TableRow><TableHead>{t("School")}</TableHead><TableHead>{t("City")}</TableHead><TableHead>{t("Type")}</TableHead><TableHead>{t("Ownership")}</TableHead><TableHead>{t("Status")}</TableHead><TableHead className="text-right">{t("Actions")}</TableHead></TableRow></TableHeader><TableBody>{query.data?.items.map((school) => <TableRow key={school.id}><TableCell className="font-semibold text-slate-900">{school.name}</TableCell><TableCell>{school.city}</TableCell><TableCell>{t(schoolTypeLabels[school.schoolType])}</TableCell><TableCell>{school.isPrivate ? t("Private") : t("Public")}</TableCell><TableCell><span className={`status-pill ${school.isApproved ? "status-approved" : "status-draft"}`}>{school.isApproved ? t("Approved") : t("Draft")}</span></TableCell><TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" onClick={() => beginEdit(school)} aria-label={t("Edit {name}", { name: school.name })}><Pencil size={15} /></Button><Button variant="outline" size="sm" className="text-rose-700 hover:bg-rose-50" onClick={() => { if (window.confirm(t("Delete {name}?", { name: school.name }))) remove.mutate(school.id); }} aria-label={t("Delete {name}", { name: school.name })}><Trash2 size={15} /></Button></div></TableCell></TableRow>)}{query.data?.items.length === 0 && <TableRow><TableCell colSpan={6} className="py-12 text-center text-slate-500">{t("No listings yet. Add the first school to the directory.")}</TableCell></TableRow>}</TableBody></Table>
       </div>
       <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4">
-        <p className="text-sm text-slate-500">Page {page} of {pageCount}</p>
+        <p className="text-sm text-slate-500">{t("Page {page} of {total}", { page, total: pageCount })}</p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1 || query.isFetching} onClick={() => setPage((current) => current - 1)}><ChevronLeft size={16} /> Previous</Button>
-          <Button variant="outline" size="sm" disabled={page >= pageCount || query.isFetching} onClick={() => setPage((current) => current + 1)}>Next <ChevronRight size={16} /></Button>
+          <Button variant="outline" size="sm" disabled={page <= 1 || query.isFetching} onClick={() => setPage((current) => current - 1)}><ChevronLeft size={16} />{" "}{t("Previous")}</Button>
+          <Button variant="outline" size="sm" disabled={page >= pageCount || query.isFetching} onClick={() => setPage((current) => current + 1)}>{t("Next")}{" "}<ChevronRight size={16} /></Button>
         </div>
       </div>
       <SchoolEditor
         open={editorOpen}
-        title={editingId ? "Edit school listing" : "Add a school"}
+        title={editingId ? t("Edit school listing") : t("Add a school")}
         form={form}
         busy={save.isPending}
         onClose={() => { setEditingId(null); setForm(emptyForm); setEditorOpen(false); setError(""); }}
@@ -113,27 +116,28 @@ function SchoolEditor({
   onChange: <K extends keyof SchoolWriteInput>(key: K, value: SchoolWriteInput[K]) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
+  const { t } = useLanguage();
   if (!open) return null;
-  return <div className="modal-backdrop" role="presentation"><form className="editor-modal" onSubmit={onSubmit}><div className="flex items-start justify-between"><div><p className="eyebrow">School details</p><h2>{title}</h2></div><button type="button" className="text-2xl leading-none text-slate-400" onClick={onClose} aria-label="Close dialog">×</button></div>
+  return <div className="modal-backdrop" role="presentation"><form className="editor-modal" onSubmit={onSubmit}><div className="flex items-start justify-between"><div><p className="eyebrow">{t("School details")}</p><h2>{title}</h2></div><button type="button" className="text-2xl leading-none text-slate-400" onClick={onClose} aria-label={t("Close dialog")}>×</button></div>
     <div className="mt-6 grid gap-4 sm:grid-cols-2">
-      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolName">Name</Label><Input id="schoolName" required value={form.name} onChange={(event) => onChange("name", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="schoolType">Type</Label><select id="schoolType" className="form-select" value={form.schoolType} onChange={(event) => onChange("schoolType", event.target.value as SchoolType)}>{schoolTypes.map((type) => <option key={type} value={type}>{schoolTypeLabels[type]}</option>)}</select></div>
-      <div className="space-y-2"><Label htmlFor="schoolCity">City</Label><Input id="schoolCity" required value={form.city} onChange={(event) => onChange("city", event.target.value)} /></div>
-      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolAddress">Address</Label><Input id="schoolAddress" required value={form.address} onChange={(event) => onChange("address", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="schoolPostalCode">Postal code</Label><Input id="schoolPostalCode" value={form.postalCode} onChange={(event) => onChange("postalCode", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="tuitionFrom">Tuition from (€)</Label><Input id="tuitionFrom" type="number" min="0" value={form.tuitionFrom ?? ""} onChange={(event) => onChange("tuitionFrom", event.target.value === "" ? null : Number(event.target.value))} /></div>
-      <div className="space-y-2"><Label htmlFor="tuitionTo">Tuition to (€)</Label><Input id="tuitionTo" type="number" min="0" value={form.tuitionTo ?? ""} onChange={(event) => onChange("tuitionTo", event.target.value === "" ? null : Number(event.target.value))} /></div>
-      <div className="space-y-2"><Label htmlFor="schoolEmail">Contact email</Label><Input id="schoolEmail" type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="schoolPhone">Phone</Label><Input id="schoolPhone" value={form.phone} onChange={(event) => onChange("phone", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="schoolWebsite">Website</Label><Input id="schoolWebsite" type="url" placeholder="https://" value={form.website} onChange={(event) => onChange("website", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="schoolLogo">Logo URL</Label><Input id="schoolLogo" type="url" placeholder="https://" value={form.logoUrl} onChange={(event) => onChange("logoUrl", event.target.value)} /></div>
-      <div className="space-y-2"><Label htmlFor="studentCapacity">Student capacity</Label><Input id="studentCapacity" type="number" min="1" value={form.studentCapacity ?? ""} onChange={(event) => onChange("studentCapacity", event.target.value === "" ? null : Number(event.target.value))} /></div>
-      <div className="space-y-2"><Label htmlFor="establishedYear">Established year</Label><Input id="establishedYear" type="number" min="1800" value={form.establishedYear ?? ""} onChange={(event) => onChange("establishedYear", event.target.value === "" ? null : Number(event.target.value))} /></div>
-      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolDescription">Description</Label><textarea id="schoolDescription" className="form-textarea" rows={3} value={form.description} onChange={(event) => onChange("description", event.target.value)} /></div>
-      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolPhotos">Photo URLs (one per line)</Label><textarea id="schoolPhotos" className="form-textarea" rows={3} value={form.photos.map((photo) => photo.url).join("\n")} onChange={(event) => onChange("photos", event.target.value.split(/\r?\n/).map((url) => url.trim()).filter(Boolean).map((url, sortOrder) => ({ url, sortOrder })))} /></div>
-      <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={form.isPrivate} onChange={(event) => onChange("isPrivate", event.target.checked)} /> Private school</label>
-      <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={form.isApproved} onChange={(event) => onChange("isApproved", event.target.checked)} /> Approved for public directory</label>
+      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolName">{t("Name")}</Label><Input id="schoolName" required value={form.name} onChange={(event) => onChange("name", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="schoolType">{t("Type")}</Label><select id="schoolType" className="form-select" value={form.schoolType} onChange={(event) => onChange("schoolType", event.target.value as SchoolType)}>{schoolTypes.map((type) => <option key={type} value={type}>{t(schoolTypeLabels[type])}</option>)}</select></div>
+      <div className="space-y-2"><Label htmlFor="schoolCity">{t("City")}</Label><Input id="schoolCity" required value={form.city} onChange={(event) => onChange("city", event.target.value)} /></div>
+      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolAddress">{t("Address")}</Label><Input id="schoolAddress" required value={form.address} onChange={(event) => onChange("address", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="schoolPostalCode">{t("Postal code")}</Label><Input id="schoolPostalCode" value={form.postalCode} onChange={(event) => onChange("postalCode", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="tuitionFrom">{t("Tuition from (€)")}</Label><Input id="tuitionFrom" type="number" min="0" value={form.tuitionFrom ?? ""} onChange={(event) => onChange("tuitionFrom", event.target.value === "" ? null : Number(event.target.value))} /></div>
+      <div className="space-y-2"><Label htmlFor="tuitionTo">{t("Tuition to (€)")}</Label><Input id="tuitionTo" type="number" min="0" value={form.tuitionTo ?? ""} onChange={(event) => onChange("tuitionTo", event.target.value === "" ? null : Number(event.target.value))} /></div>
+      <div className="space-y-2"><Label htmlFor="schoolEmail">{t("Contact email")}</Label><Input id="schoolEmail" type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="schoolPhone">{t("Phone")}</Label><Input id="schoolPhone" value={form.phone} onChange={(event) => onChange("phone", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="schoolWebsite">{t("Website")}</Label><Input id="schoolWebsite" type="url" placeholder="https://" value={form.website} onChange={(event) => onChange("website", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="schoolLogo">{t("Logo URL")}</Label><Input id="schoolLogo" type="url" placeholder="https://" value={form.logoUrl} onChange={(event) => onChange("logoUrl", event.target.value)} /></div>
+      <div className="space-y-2"><Label htmlFor="studentCapacity">{t("Student capacity")}</Label><Input id="studentCapacity" type="number" min="1" value={form.studentCapacity ?? ""} onChange={(event) => onChange("studentCapacity", event.target.value === "" ? null : Number(event.target.value))} /></div>
+      <div className="space-y-2"><Label htmlFor="establishedYear">{t("Established year")}</Label><Input id="establishedYear" type="number" min="1800" value={form.establishedYear ?? ""} onChange={(event) => onChange("establishedYear", event.target.value === "" ? null : Number(event.target.value))} /></div>
+      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolDescription">{t("Description")}</Label><textarea id="schoolDescription" className="form-textarea" rows={3} value={form.description} onChange={(event) => onChange("description", event.target.value)} /></div>
+      <div className="space-y-2 sm:col-span-2"><Label htmlFor="schoolPhotos">{t("Photo URLs (one per line)")}</Label><textarea id="schoolPhotos" className="form-textarea" rows={3} value={form.photos.map((photo) => photo.url).join("\n")} onChange={(event) => onChange("photos", event.target.value.split(/\r?\n/).map((url) => url.trim()).filter(Boolean).map((url, sortOrder) => ({ url, sortOrder })))} /></div>
+      <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={form.isPrivate} onChange={(event) => onChange("isPrivate", event.target.checked)} />{" "}{t("Private school")}</label>
+      <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={form.isApproved} onChange={(event) => onChange("isApproved", event.target.checked)} />{" "}{t("Approved for public directory")}</label>
     </div>
-    <div className="mt-7 flex justify-end gap-3"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save school"}</Button></div>
+    <div className="mt-7 flex justify-end gap-3"><Button type="button" variant="outline" onClick={onClose}>{t("Cancel")}</Button><Button type="submit" disabled={busy}>{busy ? t("Saving…") : t("Save school")}</Button></div>
   </form></div>;
 }
