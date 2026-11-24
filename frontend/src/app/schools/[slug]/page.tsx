@@ -46,7 +46,7 @@ export default async function SchoolDetailsPage({ params }: SchoolDetailsPagePro
       <section className="detail-hero mt-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <div className="detail-logo">{school.logoUrl ? <Image src={school.logoUrl} alt="" width={160} height={160} unoptimized className="h-full w-full rounded-3xl object-cover" /> : <SchoolIcon size={40} />}</div>
-          <div className="min-w-0 flex-1"><div className="flex flex-wrap gap-2"><span className="detail-tag">{t(schoolTypeLabels[school.schoolType])}</span><span className="detail-tag">{school.isPrivate ? t("Private") : t("Public")}</span></div><h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{school.name}</h1><p className="mt-2 flex items-center gap-1.5 text-slate-600"><MapPin size={17} /> {school.address}, {school.city}{school.postalCode ? ` ${school.postalCode}` : ""}</p></div>
+          <div className="min-w-0 flex-1"><div className="flex flex-wrap gap-2"><span className="detail-tag">{t(schoolTypeLabels[school.schoolType])}</span><span className="detail-tag">{school.isPrivate ? t("Private") : t("Public")}</span></div><h1 className="editorial-title mt-3 text-3xl sm:text-4xl">{school.name}</h1><p className="mt-2 flex items-center gap-1.5 text-slate-600"><MapPin size={17} className="shrink-0" /> {school.address}, {school.city}{school.postalCode ? ` ${school.postalCode}` : ""}</p></div>
           <div className="tuition-box"><span>{t("Annual tuition")}</span><b>{tuition}</b></div>
         </div>
       </section>

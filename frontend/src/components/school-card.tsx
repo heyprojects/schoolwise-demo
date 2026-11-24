@@ -14,32 +14,30 @@ export function SchoolCard({ school }: { school: SchoolListItem }) {
   const tuition = formatTuition(locale, school);
 
   return (
-    <Link href={`/schools/${school.slug}`} className="school-card group">
-      <div className="flex items-start justify-between gap-3">
+    <Link href={`/schools/${school.slug}`} className="school-card group" data-school-type={school.schoolType}>
+      <div className="school-card-art">
         <div className="school-logo">
           {school.logoUrl ? (
             // External image hosts are school-managed; use a native image to avoid unsafe host allowlists.
-            <Image src={school.logoUrl} alt="" width={120} height={120} unoptimized className="h-full w-full rounded-2xl object-cover" />
+            <Image src={school.logoUrl} alt="" width={120} height={120} unoptimized className="h-full w-full object-contain" />
           ) : (
-            <SchoolIcon size={28} strokeWidth={1.6} />
+            <SchoolIcon size={64} strokeWidth={0.9} aria-hidden="true" />
           )}
         </div>
-        <Badge variant="secondary" className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+        <Badge variant="secondary" className="school-ownership">
           {school.isPrivate ? t("Private") : t("Public")}
         </Badge>
       </div>
-      <h3 className="mt-5 line-clamp-2 text-lg font-bold tracking-tight text-slate-900 group-hover:text-teal-700">{school.name}</h3>
-      <div className="mt-3 flex items-center gap-1.5 text-sm text-slate-500">
-        <MapPin size={15} /> {school.city}
-      </div>
-      <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t(schoolTypeLabels[school.schoolType])}</p>
-          <p className="mt-1 text-sm font-semibold text-slate-700">{tuition}</p>
+      <div className="school-card-body">
+        <p className="school-stage">{t(schoolTypeLabels[school.schoolType])}</p>
+        <h3 className="mt-3 line-clamp-2 text-lg font-semibold leading-7 tracking-tight text-slate-900 group-hover:text-primary">{school.name}</h3>
+        <div className="school-location mt-3 flex items-center gap-1.5 text-sm text-slate-500">
+          <MapPin size={15} className="shrink-0" /> {school.city}
         </div>
-        <span className="rounded-full bg-teal-50 p-2 text-teal-700 transition group-hover:bg-teal-700 group-hover:text-white">
-          <ArrowUpRight size={17} />
-        </span>
+        <div className="school-card-bottom">
+          <p className="text-sm font-medium text-slate-700">{tuition}</p>
+          <span className="school-card-arrow"><ArrowUpRight size={17} /></span>
+        </div>
       </div>
     </Link>
   );
