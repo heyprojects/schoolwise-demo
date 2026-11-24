@@ -38,7 +38,10 @@ export function SiteHeader() {
           role="group"
           aria-label={t("Language")}
           aria-busy={changing}
-          className="col-start-2 row-start-1 inline-flex w-[5.625rem] shrink-0 justify-self-end rounded-lg border border-slate-200 bg-white p-1 lg:col-start-3 lg:row-start-1 lg:justify-self-center"
+          onClick={() => {
+            if (!changing) changeLocale(locale === "el" ? "en" : "el");
+          }}
+          className="col-start-2 row-start-1 inline-flex w-[5.625rem] shrink-0 cursor-pointer justify-self-end rounded-lg border border-slate-200 bg-white p-1 lg:col-start-3 lg:row-start-1 lg:justify-self-center"
         >
           {languages.map(language => (
             <button
@@ -49,7 +52,10 @@ export function SiteHeader() {
               title={language.name}
               aria-pressed={locale === language.value}
               disabled={changing}
-              onClick={() => changeLocale(language.value)}
+              onClick={event => {
+                event.stopPropagation();
+                changeLocale(language.value);
+              }}
               className={`h-10 w-10 shrink-0 cursor-pointer rounded-md p-0 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-wait disabled:opacity-60 ${locale === language.value ? "bg-teal-700 text-white" : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"}`}
             >
               {language.label}
