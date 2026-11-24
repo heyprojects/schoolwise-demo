@@ -8,6 +8,11 @@ import { LogOut, School } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button, buttonVariants } from "@/components/ui/button";
 
+const languages = [
+  { value: "el", label: "ΕΛ", name: "Ελληνικά" },
+  { value: "en", label: "EN", name: "English" },
+] as const;
+
 export function SiteHeader() {
   const { t, locale, changeLocale, changing } = useLanguage();
   const { user, loading, logout } = useAuth();
@@ -29,16 +34,28 @@ export function SiteHeader() {
           <Link className="nav-link" href="/schools">{t("Explore schools")}</Link>
           <Link className="nav-link" href="/#how-it-works">{t("How it works")}</Link>
         </nav>
-        <select
+        <div
+          role="group"
           aria-label={t("Language")}
-          className="col-start-2 row-start-1 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm text-slate-700"
-          value={locale}
-          disabled={changing}
-          onChange={event => changeLocale(event.target.value === "en" ? "en" : "el")}
+          aria-busy={changing}
+          className="col-start-2 row-start-1 inline-flex shrink-0 rounded-lg border border-slate-200 bg-white p-1"
         >
-          <option value="el" lang="el">Ελληνικά</option>
-          <option value="en" lang="en">English</option>
-        </select>
+          {languages.map(language => (
+            <button
+              key={language.value}
+              type="button"
+              lang={language.value}
+              aria-label={language.name}
+              title={language.name}
+              aria-pressed={locale === language.value}
+              disabled={changing}
+              onClick={() => changeLocale(language.value)}
+              className={`min-h-10 min-w-10 rounded-md px-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-wait disabled:opacity-60 ${locale === language.value ? "bg-teal-700 text-white" : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"}`}
+            >
+              {language.label}
+            </button>
+          ))}
+        </div>
         <div className="col-span-2 flex flex-wrap items-center gap-3">
           {loading ? (
             <span className="text-sm text-slate-500">{t("Loading…")}</span>

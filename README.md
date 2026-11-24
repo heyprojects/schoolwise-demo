@@ -62,7 +62,7 @@ Use Node.js 20.19 or later. Copy `frontend/.env.example` to `frontend/.env.local
 
 ## Website languages
 
-Greek is the default website language. The header offers **Ελληνικά / English** on desktop and mobile, including Parent and Admin pages. The preference is stored in the `schoolwise-locale` first-party cookie for one year and applies on navigation and reload; the server renders the matching document language and metadata. Switching language preserves the active account, filters and in-progress forms. Existing URLs and API enum values do not change.
+Greek is the default website language. The header offers one-click **ΕΛ / EN** buttons on desktop and mobile, including Parent and Admin pages, with the selected language highlighted. Both buttons have full language names for assistive technology and support keyboard activation. The preference is stored in the `schoolwise-locale` first-party cookie for one year and applies on navigation and reload; the server renders the matching document language and metadata. Switching language preserves the active account, filters and in-progress forms. Existing URLs and API enum values do not change.
 
 Interface labels, review statuses, known system/validation messages, dates, ratings and tuition formatting are localized through the typed dictionary in `frontend/src/lib/i18n.ts`. School names, locations, source descriptions, contact details, parent reviews and moderation notes stay in their original language. Unknown server diagnostics remain visible in their original form rather than being hidden or automatically translated. Browser-native validation prompts follow the browser's own language settings.
 
