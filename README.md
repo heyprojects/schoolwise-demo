@@ -68,12 +68,6 @@ Interface labels, review statuses, known system/validation messages, dates, rati
 
 No localization service, database migration or automatic content translation is involved. Run `npm test` in `frontend` for locale resolution, dictionary/placeholder consistency, diagnostics and tuition-formatting checks.
 
-## Visual design
-
-The website uses the Warm Editorial direction: cream surfaces, forest-green controls, terracotta accents and system-serif display headings. Shared theme tokens (including warm-neutral slate utilities) live in `frontend/src/app/globals.css` and carry through the directory, school profiles, account screens and dashboards. Status/error colors retain their semantic meanings.
-
-The homepage combines an original decorative SVG illustration with a clearly labeled school/area and city search. The illustration is not a photograph of a listed school; cards use real school logos when available and a school icon otherwise. No external fonts, stock photos, sample listings or invented ratings are added by the design. Existing search parameters, language persistence and review workflows are unchanged.
-
 ## Solution layout
 
 ```text

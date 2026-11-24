@@ -3,9 +3,8 @@
 import { useLanguage } from "@/components/providers/language-provider";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookOpenCheck, MapPin, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, BookOpenCheck, HeartHandshake, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { SchoolCard } from "@/components/school-card";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -33,41 +32,47 @@ export default function HomeClient({ initialSchools }: { initialSchools: PageRes
   return (
     <>
       <section className="hero-section">
-        <div className="container-shell">
-          <div className="editorial-hero">
-            <div className="editorial-hero-copy">
-              <p className="eyebrow">{t("Your family’s next chapter")}</p>
-              <h1><span>{t("Small steps.")}</span><em>{t("Big choices.")}</em></h1>
-              <p className="hero-intro">{t("Explore schools across Greece, compare the details that matter, and make your next step with confidence.")}</p>
-              <a href="#school-search" className="editorial-text-link">{t("Find the right school for your child.")}<ArrowRight size={18} /></a>
+        <div className="container-shell relative grid gap-12 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24">
+          <div className="relative z-10">
+            <div className="eyebrow"><Sparkles size={14} />{" "}{t("A clearer way to choose")}</div>
+            <h1 className="mt-6 max-w-2xl text-5xl font-bold leading-[1.05] tracking-[-.045em] text-slate-950 sm:text-6xl">
+              {t("Find the right school for your child.")}
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">{t("Explore schools across Greece, compare the details that matter, and make your next step with confidence.")}</p>
+            <form onSubmit={submitSearch} className="search-panel mt-9">
+              <label className="flex min-w-0 flex-1 items-center gap-3">
+                <Search size={19} className="shrink-0 text-teal-700" />
+                <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={t("School name or area")} aria-label={t("School name or area")} />
+              </label>
+              <span className="hidden h-9 w-px bg-slate-200 sm:block" />
+              <label className="flex min-w-0 flex-1 items-center gap-3">
+                <input value={city} onChange={(event) => setCity(event.target.value)} placeholder={t("City, e.g. Athens")} aria-label={t("City")} />
+              </label>
+              <Button type="submit" className="h-12 shrink-0 rounded-xl px-5">{t("Search schools")}</Button>
+            </form>
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
+              <span className="flex items-center gap-1.5"><ShieldCheck size={16} className="text-teal-700" />{" "}{t("Thoughtful school information")}</span>
+              <span className="flex items-center gap-1.5"><BadgeCheck size={16} className="text-teal-700" />{" "}{t("Moderated parent reviews")}</span>
             </div>
-            <figure className="editorial-illustration">
-              <span className="illustration-note">{t("A place to grow")}</span>
-              <Image src="/illustrations/school-garden.svg" width={480} height={465} alt="" priority />
-              <figcaption>{t("Illustration, not a school photograph.")}</figcaption>
-            </figure>
           </div>
-          <form id="school-search" onSubmit={submitSearch} className="search-panel" aria-labelledby="school-search-title">
-            <div className="search-panel-heading">
-              <h2 id="school-search-title">{t("Let’s find your school")}</h2>
-              <p>{t("Start with a school name or location.")}</p>
+          <div className="hero-art relative mx-auto w-full max-w-[500px]">
+            <div className="hero-orbit" />
+            <div className="hero-photo">
+              <div className="flex h-full flex-col justify-between rounded-[28px] bg-gradient-to-br from-teal-100 via-emerald-50 to-amber-100 p-7">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-teal-800">{t("Your family’s next chapter")}</span>
+                  <span className="rounded-full bg-white/80 p-2 text-teal-700"><BookOpenCheck size={18} /></span>
+                </div>
+                <div>
+                  <div className="mb-4 flex -space-x-3">
+                    <span className="avatar-dot bg-amber-300">P</span><span className="avatar-dot bg-rose-200">A</span><span className="avatar-dot bg-sky-200">M</span>
+                  </div>
+                  <p className="max-w-[280px] text-3xl font-bold leading-tight tracking-tight text-slate-900">{t("Every child deserves a place to thrive.")}</p>
+                  <p className="mt-3 text-sm text-slate-600">{t("Start with the questions that matter to you.")}</p>
+                </div>
+              </div>
             </div>
-            <div className="search-panel-fields">
-              <label htmlFor="home-keyword">
-                <span>{t("School name or area")}</span>
-                <span className="search-field"><Search size={18} aria-hidden="true" /><input id="home-keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={t("School name or area")} /></span>
-              </label>
-              <label htmlFor="home-city">
-                <span>{t("City")}</span>
-                <span className="search-field"><MapPin size={18} aria-hidden="true" /><input id="home-city" value={city} onChange={(event) => setCity(event.target.value)} placeholder={t("City, e.g. Athens")} /></span>
-              </label>
-              <Button type="submit" className="search-submit">{t("Search schools")}<ArrowRight size={17} /></Button>
-            </div>
-          </form>
-          <div className="editorial-values">
-            <span><MapPin size={19} />{t("Explore at your pace")}</span>
-            <span><BookOpenCheck size={19} />{t("Thoughtful school information")}</span>
-            <span><ShieldCheck size={19} />{t("Moderated parent reviews")}</span>
+            <div className="floating-note"><HeartHandshake size={18} className="text-teal-700" /><span><b>{t("Family first")}</b><small>{t("Explore at your pace")}</small></span></div>
           </div>
         </div>
       </section>
@@ -83,9 +88,9 @@ export default function HomeClient({ initialSchools }: { initialSchools: PageRes
         {featured.data && featured.data.items.length === 0 ? <p className="rounded-xl bg-slate-50 p-6 text-slate-600">{t("No schools are listed yet. Check back soon.")}</p> : null}
       </section>
 
-      <section id="how-it-works" className="how-it-works py-16 sm:py-20">
+      <section id="how-it-works" className="bg-[#f3f7f6] py-16 sm:py-20">
         <div className="container-shell">
-          <div className="mx-auto max-w-2xl text-center"><p className="eyebrow justify-center">{t("How SchoolWise helps")}</p><h2 className="editorial-title mt-3 text-3xl">{t("A better-informed choice starts here.")}</h2><p className="mt-4 leading-7 text-slate-600">{t("Compare practical school details and published parent experiences to help guide your decision.")}</p></div>
+          <div className="mx-auto max-w-2xl text-center"><p className="eyebrow justify-center">{t("How SchoolWise helps")}</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{t("A better-informed choice starts here.")}</h2><p className="mt-4 leading-7 text-slate-600">{t("Compare practical school details and published parent experiences to help guide your decision.")}</p></div>
           <div className="mt-11 grid gap-5 md:grid-cols-3">
             <article className="benefit-card"><span className="benefit-icon"><Search size={20} /></span><h3>{t("Explore your options")}</h3><p>{t("Search by area, school type, and tuition range to focus on what matters to your family.")}</p></article>
             <article className="benefit-card"><span className="benefit-icon"><BookOpenCheck size={20} /></span><h3>{t("Compare the details")}</h3><p>{t("See school information, location, contact details, and photos in one place.")}</p></article>
